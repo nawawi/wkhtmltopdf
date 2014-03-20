@@ -19,6 +19,7 @@
 
 # --------------------------------------------------------------- CONFIGURATION
 
+QT5_URL = 'https://github.com/qtproject/qt5.git'
 OPENSSL = {
     'repository': 'https://github.com/openssl/openssl.git',
     'branch'    : 'OpenSSL_1_0_1-stable',
@@ -59,7 +60,8 @@ QT_CONFIG = {
         '-release',
         '-static',
         '-graphicssystem raster',
-        '-webkit',
+        '-no-script',
+        '-no-webkit',
         '-exceptions',              # required by XmlPatterns
         '-xmlpatterns',             # required for TOC support
         '-qt-zlib',                 # use bundled versions of libraries
@@ -96,7 +98,6 @@ QT_CONFIG = {
 
     'msvc2010': [
         '-mp',
-        '-no-script',
         '-qt-style-windows',
         '-qt-style-cleanlooks',
         '-no-style-windowsxp',
@@ -109,7 +110,6 @@ QT_CONFIG = {
 
     'posix': [
         '-silent',                  # perform a silent build
-        '-script',                  # "make install" does not copy QtScript/qscriptengine.h
         '-xrender',                 # xrender support is required
         '-largefile',
         '-rpath',
@@ -146,11 +146,53 @@ QT_CONFIG = {
 
     'mingw-w64-cross' : [
         '-silent',                  # perform a silent build
-        '-script',                  # "make install" does not copy QtScript/qscriptengine.h
         '-openssl-linked',          # static linkage for OpenSSL
         '-no-reduce-exports',
         '-no-rpath',
         '-xplatform win32-g++-4.6'
+    ]
+}
+
+WEBKIT_CONFIG = {
+    'common' : [
+        '--qt',
+        '--release',
+        '--qmakearg="CONFIG+=static"',
+        '--qmakearg="CONFIG+=production_build"',
+        '--qmakearg="CONFIG+=use_all_in_one_files"',
+        '--qmakearg="DEFINES+=Q_NODLL"',
+        '--qmakearg="DEFINES+=STATIC"',
+        '--qmakearg="DEFINES+=QT_STATIC"',
+        '--qmakearg="DEFINES+=WTF_USE_3D_GRAPHICS=0"',
+        '--no-webkit2',
+        '--no-3d-rendering',
+        '--no-webgl',
+        '--no-gamepad',
+        '--no-video',
+        '--no-xslt',
+        '--no-force-sse2',
+        '--no-inspector',
+        '--no-javascript-debugger',
+        '--no-sql-database',
+        '--no-netscape-plugin-api'
+    ],
+
+    'msvc2010': [
+        '--qmakearg="QMAKE_CXXFLAGS+=/MP"',
+        '--qmakearg="QMAKE_CFLAGS+=/MP"'
+    ],
+
+    'mingw-w64-cross' : [
+        '--qmakearg="CONFIG+=silent"',
+        '--qmakearg="QMAKE_CXXFLAGS+=-Wno-c++0x-compat"'
+    ],
+
+    'posix' : [
+        '--qmakearg="CONFIG+=silent"',
+        '--qmakearg="QT_CONFIG+=no-pkg-config"',            # disables HAVE_SQLITE3=1
+        '--qmakearg="DEFINES+=WTF_USE_LIBJPEG=0"',
+        '--qmakearg="DEFINES+=WTF_USE_LIBPNG=0"',
+        '--qmakearg="DEFINES+=WTF_USE_ZLIB=0"'
     ]
 }
 
@@ -257,9 +299,17 @@ def check_msvc2010(config):
 def build_msvc2010(config, basedir):
     build_openssl(config, basedir)
 
+    qt5dir = os.path.join(basedir, 'qt5')
+    if not exists(os.path.join(qt5dir, '.git')):
+        rmdir(qt5dir)
+        os.chdir(basedir)
+        shell('git clone %s qt5' % QT5_URL)
+
     ssldir = os.path.join(basedir, config, 'openssl')
     qtdir  = os.path.join(basedir, config, 'qt')
+    wkdir  = os.path.join(basedir, config, 'webkit')
     mkdir_p(qtdir)
+    mkdir_p(wkdir)
 
     args = []
     args.extend(QT_CONFIG['common'])
@@ -272,6 +322,20 @@ def build_msvc2010(config, basedir):
     os.chdir(qtdir)
     shell('%s\\..\\qt\\configure.exe %s' % (basedir, ' '.join(args)))
     shell('nmake')
+
+    args = []
+    args.extend(WEBKIT_CONFIG['common'])
+    args.extend(WEBKIT_CONFIG['msvc2010'])
+
+    os.environ['QTDIR']           = qtdir
+    os.environ['PATH']            = '%s;%s\\bin;%s\\gnuwin32\\bin' % (os.environ['PATH'], qtdir, qt5dir)
+    os.environ['SQLITE3SRCDIR']   = os.path.join(basedir, '..', 'qt', 'src', '3rdparty', 'sqlite')
+    os.environ['WEBKITOUTPUTDIR'] = wkdir
+
+    os.chdir(wkdir)
+    shell('perl ../../../webkit/Tools/Scripts/build-webkit %s' % ' '.join(args))
+    os.chdir(os.path.join(wkdir, 'Release'))
+    shell('nmake install')
 
     appdir = os.path.join(basedir, config, 'app')
     mkdir_p(appdir)
@@ -309,10 +373,11 @@ def build_mingw64_cross(config, basedir):
     build_openssl(config, basedir)
 
     ssldir = os.path.join(basedir, config, 'openssl')
-    build  = os.path.join(basedir, config, 'qt_build')
     qtdir  = os.path.join(basedir, config, 'qt')
+    wkdir  = os.path.join(basedir, config, 'webkit')
 
-    mkdir_p(build)
+    mkdir_p(qtdir)
+    mkdir_p(wkdir)
 
     args = []
     args.extend(QT_CONFIG['common'])
@@ -324,9 +389,22 @@ def build_mingw64_cross(config, basedir):
 
     os.environ['OPENSSL_LIBS'] = '-lssl -lcrypto -L %s/lib %s' % (ssldir, OPENSSL['build'][config]['os_libs'])
 
-    os.chdir(build)
+    os.chdir(qtdir)
     shell('%s/../qt/configure %s' % (basedir, ' '.join(args)))
     shell('make -j%d' % CPU_COUNT)
+
+    args = []
+    args.extend(WEBKIT_CONFIG['common'])
+    args.extend(WEBKIT_CONFIG['mingw-w64-cross'])
+
+    os.environ['QTDIR']           = qtdir
+    os.environ['PATH']            = '%s:%s/bin' % (os.environ['PATH'], qtdir)
+    os.environ['SQLITE3SRCDIR']   = os.path.join(basedir, '..', 'qt', 'src', '3rdparty', 'sqlite')
+    os.environ['WEBKITOUTPUTDIR'] = wkdir
+
+    os.chdir(wkdir)
+    shell('perl ../../../webkit/Tools/Scripts/build-webkit %s' % ' '.join(args))
+    os.chdir(os.path.join(wkdir, 'Release'))
     shell('make install')
 
     appdir = os.path.join(basedir, config, 'app')
@@ -357,7 +435,8 @@ def build_linux_schroot(config, basedir):
     script = os.path.join(dir, 'build.sh')
     dist   = os.path.join(dir, 'wkhtmltox-%s' % version)
 
-    mkdir_p(os.path.join(dir, 'qt_build'))
+    mkdir_p(os.path.join(dir, 'qt'))
+    mkdir_p(os.path.join(dir, 'webkit'))
     mkdir_p(os.path.join(dir, 'app'))
 
     rmdir(dist)
@@ -368,18 +447,35 @@ def build_linux_schroot(config, basedir):
     args = []
     args.extend(QT_CONFIG['common'])
     args.extend(QT_CONFIG['posix'])
-    args.append('--prefix=../qt')
+    args.append('--prefix=%s' % os.path.join(dir, 'qt'))
+
+    wk_args = []
+    wk_args.extend(WEBKIT_CONFIG['common'])
+    wk_args.extend(WEBKIT_CONFIG['posix'])
 
     lines = ['#!/bin/bash']
     lines.append('# start of autogenerated build script')
-    lines.append('cd qt_build')
+    lines.append('cd qt')
     if config == 'centos5-i386':
         lines.append('export CFLAGS=-march=i486')
         lines.append('export CXXFLAGS=-march=i486')
+        wk_args.append('--qmakearg="QMAKE_CFLAGS+=-march=i486"')
+        wk_args.append('--qmakearg="QMAKE_CXXFLAGS+=-march=i486"')
     lines.append('../../../qt/configure %s || exit 1' % ' '.join(args))
     lines.append('if ! make -j%d -q; then\n  make -j%d || exit 1\nfi' % (CPU_COUNT, CPU_COUNT))
+    lines.append('export QTDIR=`pwd`')
+    if config.startswith('centos5'):
+        lines.append('export PATH=/override:$PATH:$QTDIR/bin')  # to pick up python 2.6
+    else:
+        lines.append('export PATH=$PATH:$QTDIR/bin')
+    lines.append('export SQLITE3SRCDIR=$QTDIR/../../../qt/src/3rdparty/sqlite')
+    lines.append('export WEBKITOUTPUTDIR=$QTDIR/../webkit')
+    lines.append('cd ../webkit')
+    lines.append('if ! perl ../../../webkit/Tools/Scripts/build-webkit %s; then' % ' '.join(wk_args))
+    lines.append('  cd Release\n  make -j%d || exit 1\n  cd ..\nfi' % CPU_COUNT)
+    lines.append('cd Release')
     lines.append('make install || exit 1')
-    lines.append('cd ../app')
+    lines.append('cd ../../app')
     lines.append('GIT_DIR=../../../.git ../qt/bin/qmake ../../../wkhtmltopdf.pro')
     lines.append('make -j%d || exit 1' % CPU_COUNT)
     lines.append('strip bin/wkhtmltopdf bin/wkhtmltoimage')
