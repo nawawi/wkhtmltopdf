@@ -65,10 +65,6 @@ INJECTED_SCRIPT_SOURCE = $$PWD/inspector/InjectedScriptSource.js
 
 INJECTED_SCRIPT_CANVAS_MODULE_SOURCE = $$PWD/inspector/InjectedScriptCanvasModuleSource.js
 
-DEBUGGER_SCRIPT_SOURCE = $$PWD/bindings/v8/DebuggerScript.js
-
-ARRAY_BUFFER_VIEW_CUSTOM_SCRIPT_SOURCE = $$PWD/bindings/v8/custom/V8ArrayBufferViewCustomScript.js
-
 XPATHBISON = $$PWD/xml/XPathGrammar.y
 
 contains(DEFINES, ENABLE_SVG=1) {
@@ -810,19 +806,6 @@ InjectedScriptCanvasModuleSource.input = INJECTED_SCRIPT_CANVAS_MODULE_SOURCE
 InjectedScriptCanvasModuleSource.commands = perl $$PWD/inspector/xxd.pl InjectedScriptCanvasModuleSource_js ${QMAKE_FILE_IN} ${QMAKE_FILE_OUT}
 InjectedScriptCanvasModuleSource.add_output_to_sources = false
 GENERATORS += InjectedScriptCanvasModuleSource
-
-# GENERATOR 2-c: inspector debugger script source compiler
-debuggerScriptSource.output = DebuggerScriptSource.h
-debuggerScriptSource.input = DEBUGGER_SCRIPT_SOURCE
-debuggerScriptSource.commands = perl $$PWD/inspector/xxd.pl DebuggerScriptSource_js ${QMAKE_FILE_IN} ${QMAKE_FILE_OUT}
-debuggerScriptSource.add_output_to_sources = false
-GENERATORS += debuggerScriptSource
-
-arrayBufferViewCustomScript.output = V8ArrayBufferViewCustomScript.h
-arrayBufferViewCustomScript.input = ARRAY_BUFFER_VIEW_CUSTOM_SCRIPT_SOURCE
-arrayBufferViewCustomScript.commands = perl $$PWD/inspector/xxd.pl V8ArrayBufferViewCustomScript_js ${QMAKE_FILE_IN} ${QMAKE_FILE_OUT}
-arrayBufferViewCustomScript.add_output_to_sources = false
-GENERATORS += arrayBufferViewCustomScript
 
 # GENERATOR 4: CSS grammar
 # Moc from Qt4 can not handle YACC files. Fortunately it seems preprocessing is not always required.
