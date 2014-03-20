@@ -42,40 +42,50 @@ debootstrap --arch=amd64 --variant=buildd wheezy /srv/chroot-wkhtmltopdf/wheezy-
 
 # update packages and install build dependencies
 cat > /srv/chroot-wkhtmltopdf/wheezy-amd64/etc/apt/sources.list <<EOF
-deb     http://ftp.debian.org/debian/ wheezy         main contrib non-free
-deb     http://ftp.debian.org/debian/ wheezy-updates main contrib non-free
-deb     http://security.debian.org/   wheezy/updates main contrib non-free
-deb-src http://ftp.debian.org/debian/ wheezy         main contrib non-free
-deb-src http://ftp.debian.org/debian/ wheezy-updates main contrib non-free
-deb-src http://security.debian.org/   wheezy/updates main contrib non-free
+deb http://ftp.debian.org/debian/ wheezy         main
+deb http://ftp.debian.org/debian/ wheezy-updates main
+deb http://security.debian.org/   wheezy/updates main
 EOF
+cat > /srv/chroot-wkhtmltopdf/wheezy-amd64/bootstrap.sh <<EOF
+apt-get update
+apt-get dist-upgrade --assume-yes
+# tools required for building WebKit
+apt-get install --assume-yes git bison flex m4 gperf flexc++ ruby python
+# taken from http://qt-project.org/doc/qt-4.8/install-x11.html#note-content-228
+apt-get install --assume-yes libssl-dev libfontconfig1-dev libfreetype6-dev libx11-dev libxcursor-dev libxext-dev libxfixes-dev libxft-dev libxi-dev libxrandr-dev libxrender-dev
+rm /bootstrap.sh
+EOF
+cp /srv/chroot-wkhtmltopdf/wheezy-amd64/bootstrap.sh         /srv/chroot-wkhtmltopdf/wheezy-i386/bootstrap.sh
 cp /srv/chroot-wkhtmltopdf/wheezy-amd64/etc/apt/sources.list /srv/chroot-wkhtmltopdf/wheezy-i386/etc/apt/sources.list
-chroot         /srv/chroot-wkhtmltopdf/wheezy-amd64/ apt-get update
-linux32 chroot /srv/chroot-wkhtmltopdf/wheezy-i386/  apt-get update
-chroot         /srv/chroot-wkhtmltopdf/wheezy-amd64/ apt-get dist-upgrade --assume-yes
-linux32 chroot /srv/chroot-wkhtmltopdf/wheezy-i386/  apt-get dist-upgrade --assume-yes
-chroot         /srv/chroot-wkhtmltopdf/wheezy-amd64/ apt-get install --assume-yes git-core xz-utils
-linux32 chroot /srv/chroot-wkhtmltopdf/wheezy-i386/  apt-get install --assume-yes git-core xz-utils
-chroot         /srv/chroot-wkhtmltopdf/wheezy-amd64/ apt-get build-dep --assume-yes libqt4-core
-linux32 chroot /srv/chroot-wkhtmltopdf/wheezy-i386/  apt-get build-dep --assume-yes libqt4-core
+
+chroot         /srv/chroot-wkhtmltopdf/wheezy-amd64/ bash /bootstrap.sh
+linux32 chroot /srv/chroot-wkhtmltopdf/wheezy-i386/  bash /bootstrap.sh
+
+rm /srv/chroot-wkhtmltopdf/wheezy-amd64/var/cache/apt/archives/*.deb
+rm /srv/chroot-wkhtmltopdf/wheezy-i386/var/cache/apt/archives/*.deb
 
 # create chroots for Centos 5
-linux32 rinse --arch i386  --distribution centos-5 --directory /srv/chroot-wkhtmltopdf/centos-5-i386
-rinse         --arch amd64 --distribution centos-5 --directory /srv/chroot-wkhtmltopdf/centos-5-amd64
+linux32 rinse --arch i386  --distribution centos-5 --directory /srv/chroot-wkhtmltopdf/centos5-i386
+rinse         --arch amd64 --distribution centos-5 --directory /srv/chroot-wkhtmltopdf/centos5-amd64
 
 # update packages and install development tools and build dependencies
+cat > /srv/chroot-wkhtmltopdf/centos5-amd64/bootstrap.sh <<EOF
+yum install -y wget
 wget http://dl.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm
-cp epel-release-5-4.noarch.rpm /srv/chroot-wkhtmltopdf/centos-5-amd64
-mv epel-release-5-4.noarch.rpm /srv/chroot-wkhtmltopdf/centos-5-i386
-chroot         /srv/chroot-wkhtmltopdf/centos-5-amd64 yum update -y
-linux32 chroot /srv/chroot-wkhtmltopdf/centos-5-i386  yum update -y
-chroot         /srv/chroot-wkhtmltopdf/centos-5-amd64 rpm -i /epel-release-5-4.noarch.rpm
-linux32 chroot /srv/chroot-wkhtmltopdf/centos-5-i386  rpm -i /epel-release-5-4.noarch.rpm
-echo "exclude = *.i?86">>/srv/chroot-wkhtmltopdf/centos-5-amd64/etc/yum.conf
-chroot         /srv/chroot-wkhtmltopdf/centos-5-amd64 yum install -y gcc gcc-c++ make qt4-devel openssl-devel diffutils perl xz git
-linux32 chroot /srv/chroot-wkhtmltopdf/centos-5-i386  yum install -y gcc gcc-c++ make qt4-devel openssl-devel diffutils perl xz git
-rm /srv/chroot-wkhtmltopdf/centos-5-i386/epel-release-5-4.noarch.rpm
-rm /srv/chroot-wkhtmltopdf/centos-5-amd64/epel-release-5-4.noarch.rpm
+rpm -i epel-release-5-4.noarch.rpm
+rm -f epel-release-5-4.noarch.rpm
+wget http://centos.karan.org/el5/ruby187/kbs-el5-ruby187.repo -O /etc/yum.repos.d/kbs-el5-rb187.repo
+yum update -y
+yum install -y gcc gcc-c++ make qt4-devel openssl-devel diffutils perl xz git
+yum install -y bison flex m4 gperf ruby python26 perl-version
+mkdir -p /override
+ln -s /usr/bin/python2.6 /override/python
+rm /bootstrap.sh
+EOF
+cp /srv/chroot-wkhtmltopdf/centos5-amd64/bootstrap.sh /srv/chroot-wkhtmltopdf/centos5-i386/bootstrap.sh
+echo "exclude = *.i?86">>/srv/chroot-wkhtmltopdf/centos5-amd64/etc/yum.conf
+chroot         /srv/chroot-wkhtmltopdf/centos5-amd64 bash /bootstrap.sh
+linux32 chroot /srv/chroot-wkhtmltopdf/centos5-i386  bash /bootstrap.sh
 
 # create schroot configuration
 cat > /etc/schroot/chroot.d/wkhtmltopdf <<EOF
@@ -96,7 +106,7 @@ root-users=root
 
 [wkhtmltopdf-centos5-i386]
 type=directory
-directory=/srv/chroot-wkhtmltopdf/centos-5-i386/
+directory=/srv/chroot-wkhtmltopdf/centos5-i386/
 description=CentOS 5 i386 for wkhtmltopdf
 users=$1
 root-users=root
@@ -104,7 +114,7 @@ personality=linux32
 
 [wkhtmltopdf-centos5-amd64]
 type=directory
-directory=/srv/chroot-wkhtmltopdf/centos-5-amd64/
+directory=/srv/chroot-wkhtmltopdf/centos5-amd64/
 description=CentOS 5 amd64 for wkhtmltopdf
 users=$1
 root-users=root
