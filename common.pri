@@ -32,28 +32,20 @@ exists($$QMAKE_LIBDIR_QT/libQtGui.so) {
     DEFINES += QT_STATIC
 }
 
-win32-msvc2010 {
-} else {
-	MOC_DIR = ../../build
-	OBJECTS_DIR = ../../build
-	UI_DIR = ../../build
-}
-
+MOC_DIR      = ../../build
+OBJECTS_DIR  = ../../build
+UI_DIR       = ../../build
 INCLUDEPATH += ../../include
 
-win32 {
-    CONFIG += console
-}
-
-win32-g++* {
-    QMAKE_LFLAGS += -static-libgcc
-    QMAKE_LFLAGS += -static-libstdc++
-}
+win32:      CONFIG += console
+win32-g++*: QMAKE_LFLAGS += -static-libgcc -static-libstdc++
 
 QT += webkit network xmlpatterns svg
+greaterThan(QT_MAJOR_VERSION, 4): QT += webkitwidgets
 
 # version related information
-VERSION_TEXT=$$cat($$PWD/VERSION)
+VERSION_TEXT=$$(WKHTMLTOX_VERSION)
+isEmpty(VERSION_TEXT): VERSION_TEXT=$$cat($$PWD/VERSION)
 VERSION_LIST=$$split(VERSION_TEXT, "-")
 count(VERSION_LIST, 1) {
     VERSION=$$VERSION_TEXT
@@ -61,7 +53,6 @@ count(VERSION_LIST, 1) {
 } else {
     VERSION=$$member(VERSION_LIST, 0)
     BUILD=$$member(VERSION_LIST, 1)
-    system(git rev-parse HEAD):BUILD=$$system(git rev-parse HEAD)
     FULL_VERSION=$$VERSION-$$BUILD
 }
 

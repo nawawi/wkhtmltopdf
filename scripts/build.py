@@ -23,15 +23,15 @@ QT5_URL = 'https://github.com/qtproject/qt5.git'
 OPENSSL = {
     'repository': 'https://github.com/openssl/openssl.git',
     'branch'    : 'OpenSSL_1_0_1-stable',
-    'tag'       : 'OpenSSL_1_0_1f',
+    'tag'       : 'OpenSSL_1_0_1g',
     'build'     : {
-        'msvc2010-win32': {
+        'msvc*-win32*': {
             'configure' : 'VC-WIN32 no-asm',
             'build'     : ['ms\\do_ms.bat', 'nmake /f ms\\nt.mak install'],
             'libs'      : ['ssleay32.lib', 'libeay32.lib'],
             'os_libs'   : '-lUser32 -lAdvapi32 -lGdi32 -lCrypt32'
         },
-        'msvc2010-win64': {
+        'msvc*-win64*': {
             'configure' : 'VC-WIN64A',
             'build'     : ['ms\\do_win64a.bat', 'nmake /f ms\\nt.mak install'],
             'libs'      : ['ssleay32.lib', 'libeay32.lib'],
@@ -96,7 +96,7 @@ QT_CONFIG = {
         '-nomake translations'
     ],
 
-    'msvc2010': [
+    'msvc': [
         '-mp',
         '-qt-style-windows',
         '-qt-style-cleanlooks',
@@ -197,8 +197,16 @@ WEBKIT_CONFIG = {
 }
 
 BUILDERS = {
-    'msvc2010-win32':        'msvc2010',
-    'msvc2010-win64':        'msvc2010',
+    'msvc2008-win32':        'msvc',
+    'msvc2008-win64':        'msvc',
+    'msvc2010-win32':        'msvc',
+    'msvc2010-win64':        'msvc',
+    'msvc2012-win32':        'msvc',
+    'msvc2012-win64':        'msvc',
+    'msvc2013-win32':        'msvc',
+    'msvc2013-win64':        'msvc',
+    'msvc-winsdk71-win32':   'msvc_winsdk71',
+    'msvc-winsdk71-win64':   'msvc_winsdk71',
     'centos5-i386':          'linux_schroot',
     'centos5-amd64':         'linux_schroot',
     'wheezy-i386':           'linux_schroot',
@@ -207,9 +215,21 @@ BUILDERS = {
     'mingw-w64-cross-win64': 'mingw64_cross'
 }
 
+BUILDER_FLAGS = {
+    'msvc':          ['clean', 'debug'],
+    'msvc_winsdk71': ['clean', 'debug'],
+    'linux_schroot': ['clean'],
+    'mingw64_cross': ['clean'],
+}
+
+FLAG_HELP = {
+    'clean': 'performs a clean build (instead of an incremental build)',
+    'debug': 'performs a debug build'
+}
+
 # --------------------------------------------------------------- HELPERS
 
-import os, sys, subprocess, shutil, multiprocessing
+import os, sys, subprocess, shutil, fnmatch, multiprocessing
 
 from os.path import exists
 
@@ -236,13 +256,21 @@ def get_version(basedir):
     text = open(os.path.join(basedir, '..', 'VERSION'), 'r').read()
     if '-' not in text:
         return (text, text)
-    text = text[:text.index('-')]
+    version = text[:text.index('-')]
     os.chdir(os.path.join(basedir, '..'))
-    hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
-    return ('%s-%s' % (text, hash), text)
+    try:
+        hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], stderr=subprocess.STDOUT).strip()
+    except subprocess.CalledProcessError:
+        return (text, version)
+    return ('%s-%s' % (version, hash), version)
 
 def build_openssl(config, basedir):
-    if not config in OPENSSL['build']:
+    cfg = None
+    for key in OPENSSL['build']:
+        if fnmatch.fnmatch(config, key):
+            cfg = key
+
+    if not cfg:
         return
 
     srcdir = os.path.join(basedir, 'openssl')
@@ -250,7 +278,7 @@ def build_openssl(config, basedir):
 
     def is_compiled():
         compiled = exists(os.path.join(dstdir, 'include', 'openssl', 'ssl.h'))
-        for lib in OPENSSL['build'][config]['libs']:
+        for lib in OPENSSL['build'][cfg]['libs']:
             compiled = compiled and exists(os.path.join(dstdir, 'lib', lib))
         return compiled
 
@@ -266,7 +294,7 @@ def build_openssl(config, basedir):
     shell('git checkout %s' % (OPENSSL['tag']))
 
     if not is_compiled():
-        opts = OPENSSL['build'][config]
+        opts = OPENSSL['build'][cfg]
         shell('perl Configure --openssldir=%s %s' % (dstdir, opts['configure']))
         for cmd in opts['build']:
             shell(cmd)
@@ -274,30 +302,106 @@ def build_openssl(config, basedir):
         if not is_compiled():
             error("Unable to compile OpenSSL for your system, aborting.")
 
-# --------------------------------------------------------------- MSVC 2010
+    return OPENSSL['build'][cfg]['os_libs']
 
-def check_msvc2010(config):
-    for key in ['Configuration', 'TARGET_PLATFORM', 'TARGET_CPU']:
-        if not key in os.environ:
-            error("Please run under appropriate 'Windows SDK 7.1 Command Prompt'.")
+# --------------------------------------------------------------- MSVC (2008-2013)
 
-    if os.environ['TARGET_PLATFORM'] not in ['XP', 'LH', 'SRV', 'LHS']:
-        error("Please configure for 'Windows Server 2008 Release' or earlier.")
+MSVC_LOCATION = {
+    'msvc2008': 'VS90COMNTOOLS',
+    'msvc2010': 'VS100COMNTOOLS',
+    'msvc2012': 'VS110COMNTOOLS',
+    'msvc2013': 'VS120COMNTOOLS'
+}
 
-    if os.environ['Configuration'] != 'Release':
-        error("Please configure for release mode.")
+def check_msvc(config):
+    version, arch = config.split('-')
+    env_var = MSVC_LOCATION[version]
+    if not env_var in os.environ:
+        error("%s does not seem to be installed." % version)
 
-    if os.environ['TARGET_CPU'] not in ['x86', 'x64']:
-        error("Please configure CPU for either x86 or x64.")
+    vcdir = os.path.join(os.environ[env_var], '..', '..', 'VC')
+    if not exists(os.path.join(vcdir, 'vcvarsall.bat')):
+        error("%s: unable to find vcvarsall.bat" % version)
 
-    if os.environ['TARGET_CPU'] == 'x86' and config == 'msvc2010-win64':
-        error("Error: SDK configured for x86 but trying to build 64-bit.")
+    if arch == 'win32' and not exists(os.path.join(vcdir, 'bin', 'cl.exe')):
+        error("%s: unable to find the x86 compiler" % version)
 
-    if os.environ['TARGET_CPU'] == 'x64' and config == 'msvc2010-win32':
-        error("Error: SDK configured for x64 but trying to build 32-bit.")
+    if arch == 'win64' and not exists(os.path.join(vcdir, 'bin', 'amd64', 'cl.exe')) \
+                       and not exists(os.path.join(vcdir, 'bin', 'x86_amd64', 'cl.exe')):
+        error("%s: unable to find the amd64 compiler" % version)
 
-def build_msvc2010(config, basedir):
-    build_openssl(config, basedir)
+def build_msvc(config, basedir, clean, debug):
+    msvc, arch = config.split('-')
+    vcdir = os.path.join(os.environ[MSVC_LOCATION[msvc]], '..', '..', 'VC')
+    vcarg = 'x86'
+    if arch == 'win64':
+        if exists(os.path.join(vcdir, 'bin', 'amd64', 'cl.exe')):
+            vcarg = 'amd64'
+        else:
+            vcarg = 'x86_amd64'
+
+    python = sys.executable
+    process = subprocess.Popen('("%s" %s>nul)&&"%s" -c "import os; print repr(os.environ)"' % (
+        os.path.join(vcdir, 'vcvarsall.bat'), vcarg, python), stdout=subprocess.PIPE, shell=True)
+    stdout, _ = process.communicate()
+    exitcode = process.wait()
+    if exitcode != 0:
+        error("%s: unable to initialize the environment" % msvc)
+
+    os.environ.update(eval(stdout.strip()))
+
+    build_msvc_common(config, basedir, clean, debug)
+
+# --------------------------------------------------------------- MSVC via Windows SDK 7.1
+
+def check_msvc_winsdk71(config):
+    for pfile in ['ProgramFiles(x86)', 'ProgramFiles']:
+        if pfile in os.environ and exists(os.path.join(os.environ[pfile], 'Microsoft SDKs', 'Windows', 'v7.1', 'Bin', 'SetEnv.cmd')):
+            return
+    error("Unable to detect the location of Windows SDK 7.1")
+
+def build_msvc_winsdk71(config, basedir, clean, debug):
+    arch = config[config.rindex('-'):]
+    setenv = None
+    for pfile in ['ProgramFiles(x86)', 'ProgramFiles']:
+        if not pfile in os.environ:
+            continue
+        setenv = os.path.join(os.environ[pfile], 'Microsoft SDKs', 'Windows', 'v7.1', 'Bin', 'SetEnv.cmd')
+
+    mode = debug and '/Debug' or '/Release'
+    if arch == 'win64':
+        args = '/2008 /x64 %s' % mode
+    else:
+        args = '/2008 /x86 %s' % mode
+
+    python = sys.executable
+    process = subprocess.Popen('("%s" %s>nul)&&"%s" -c "import os; print repr(os.environ)"' % (
+        setenv, args, python), stdout=subprocess.PIPE, shell=True)
+    stdout, _ = process.communicate()
+    exitcode = process.wait()
+    if exitcode != 0:
+        error("unable to initialize the environment for Windows SDK 7.1")
+
+    os.environ.update(eval(stdout.strip()))
+
+    build_msvc_common(config, basedir, clean, debug)
+
+def build_msvc_common(config, basedir, clean, debug):
+    if debug:
+        ssl = OPENSSL['build']
+        cfg = QT_CONFIG['common']
+        for key in ssl:
+            if fnmatch.fnmatch(config, key):
+                ssl[key]['configure'] = 'debug-'+ssl[key]['configure']
+        cfg[cfg.index('-release')] = '-debug'
+        cfg[cfg.index('-webkit')]  = '-webkit-debug'
+        config += '-dbg'
+
+    if clean:
+        rmdir(os.path.join(basedir, config))
+
+    version, simple_version = get_version(basedir)
+    ssl_libs = build_openssl(config, basedir)
 
     qt5dir = os.path.join(basedir, 'qt5')
     if not exists(os.path.join(qt5dir, '.git')):
@@ -313,14 +417,16 @@ def build_msvc2010(config, basedir):
 
     args = []
     args.extend(QT_CONFIG['common'])
-    args.extend(QT_CONFIG['msvc2010'])
+    args.extend(QT_CONFIG['msvc'])
     args.append('-I %s\\include' % ssldir)
     args.append('-L %s\\lib' % ssldir)
     args.append('OPENSSL_LIBS="-L%s -lssleay32 -llibeay32 %s"' % \
-        (ssldir.replace('\\', '\\\\'), OPENSSL['build'][config]['os_libs']))
+        (ssldir.replace('\\', '\\\\'), ssl_libs))
 
     os.chdir(qtdir)
-    shell('%s\\..\\qt\\configure.exe %s' % (basedir, ' '.join(args)))
+    if not exists('is_configured'):
+        shell('%s\\..\\qt\\configure.exe %s' % (basedir, ' '.join(args)))
+        open('is_configured', 'w').write('')
     shell('nmake')
 
     args = []
@@ -340,6 +446,10 @@ def build_msvc2010(config, basedir):
     appdir = os.path.join(basedir, config, 'app')
     mkdir_p(appdir)
     os.chdir(appdir)
+    rmdir('bin')
+    mkdir_p('bin')
+
+    os.environ['WKHTMLTOX_VERSION'] = version
 
     shell('%s\\bin\\qmake %s\\..\\wkhtmltopdf.pro' % (qtdir, basedir))
     shell('nmake')
@@ -350,7 +460,6 @@ def build_msvc2010(config, basedir):
             continue
         found = True
 
-        version, simple_version = get_version(basedir)
         makensis = os.path.join(os.environ[pfile], 'NSIS', 'makensis.exe')
         os.chdir(os.path.join(basedir, '..'))
         shell('"%s" /DVERSION=%s /DSIMPLE_VERSION=%s /DTARGET=%s wkhtmltox.nsi' % \
@@ -369,8 +478,12 @@ MINGW_W64_PREFIX = {
 def check_mingw64_cross(config):
     shell('%s-gcc --version' % MINGW_W64_PREFIX[config])
 
-def build_mingw64_cross(config, basedir):
-    build_openssl(config, basedir)
+def build_mingw64_cross(config, basedir, clean):
+    if clean:
+        rmdir(os.path.join(basedir, config))
+
+    version, simple_version = get_version(basedir)
+    ssl_libs = build_openssl(config, basedir)
 
     ssldir = os.path.join(basedir, config, 'openssl')
     qtdir  = os.path.join(basedir, config, 'qt')
@@ -387,10 +500,17 @@ def build_mingw64_cross(config, basedir):
     args.append('-L %s/lib'     % ssldir)
     args.append('-device-option CROSS_COMPILE=%s-' % MINGW_W64_PREFIX[config])
 
-    os.environ['OPENSSL_LIBS'] = '-lssl -lcrypto -L %s/lib %s' % (ssldir, OPENSSL['build'][config]['os_libs'])
+    os.environ['OPENSSL_LIBS'] = '-lssl -lcrypto -L %s/lib %s' % (ssldir, ssl_libs)
 
+<<<<<<< HEAD
     os.chdir(qtdir)
     shell('%s/../qt/configure %s' % (basedir, ' '.join(args)))
+=======
+    os.chdir(build)
+    if not exists('is_configured'):
+        shell('%s/../qt/configure %s' % (basedir, ' '.join(args)))
+        shell('touch is_configured')
+>>>>>>> upstream/master
     shell('make -j%d' % CPU_COUNT)
 
     args = []
@@ -410,15 +530,16 @@ def build_mingw64_cross(config, basedir):
     appdir = os.path.join(basedir, config, 'app')
     mkdir_p(appdir)
     os.chdir(appdir)
+    shell('rm -f bin/*')
 
     # set up cross compiling prefix correctly (isn't set by make install)
     os.environ['QTDIR'] = qtdir
+    os.environ['WKHTMLTOX_VERSION'] = version
     shell('%s/bin/qmake -set CROSS_COMPILE %s-' % (qtdir, MINGW_W64_PREFIX[config]))
     shell('%s/bin/qmake -spec win32-g++-4.6 %s/../wkhtmltopdf.pro' % (qtdir, basedir))
     shell('make')
     shutil.copy('bin/libwkhtmltox0.a', 'bin/wkhtmltox.lib')
 
-    version, simple_version = get_version(basedir)
     os.chdir(os.path.join(basedir, '..'))
     shell('makensis -DVERSION=%s -DSIMPLE_VERSION=%s -DTARGET=%s wkhtmltox.nsi' % \
             (version, simple_version, config))
@@ -428,7 +549,10 @@ def build_mingw64_cross(config, basedir):
 def check_linux_schroot(config):
     shell('schroot -c wkhtmltopdf-%s -- gcc --version' % config)
 
-def build_linux_schroot(config, basedir):
+def build_linux_schroot(config, basedir, clean):
+    if clean:
+        rmdir(os.path.join(basedir, config))
+
     version, simple_version = get_version(basedir)
 
     dir    = os.path.join(basedir, config)
@@ -459,9 +583,17 @@ def build_linux_schroot(config, basedir):
     if config == 'centos5-i386':
         lines.append('export CFLAGS=-march=i486')
         lines.append('export CXXFLAGS=-march=i486')
+<<<<<<< HEAD
         wk_args.append('--qmakearg="QMAKE_CFLAGS+=-march=i486"')
         wk_args.append('--qmakearg="QMAKE_CXXFLAGS+=-march=i486"')
     lines.append('../../../qt/configure %s || exit 1' % ' '.join(args))
+=======
+
+    lines.append('if [ ! -f is_configured ]; then')
+    lines.append('  ../../../qt/configure %s || exit 1' % ' '.join(args))
+    lines.append('  touch is_configured')
+    lines.append('fi')
+>>>>>>> upstream/master
     lines.append('if ! make -j%d -q; then\n  make -j%d || exit 1\nfi' % (CPU_COUNT, CPU_COUNT))
     lines.append('export QTDIR=`pwd`')
     if config.startswith('centos5'):
@@ -475,8 +607,15 @@ def build_linux_schroot(config, basedir):
     lines.append('  cd Release\n  make -j%d || exit 1\n  cd ..\nfi' % CPU_COUNT)
     lines.append('cd Release')
     lines.append('make install || exit 1')
+<<<<<<< HEAD
     lines.append('cd ../../app')
     lines.append('GIT_DIR=../../../.git ../qt/bin/qmake ../../../wkhtmltopdf.pro')
+=======
+    lines.append('cd ../app')
+    lines.append('rm -f bin/*')
+    lines.append('export WKHTMLTOX_VERSION=%s' % version)
+    lines.append('../qt/bin/qmake ../../../wkhtmltopdf.pro')
+>>>>>>> upstream/master
     lines.append('make -j%d || exit 1' % CPU_COUNT)
     lines.append('strip bin/wkhtmltopdf bin/wkhtmltoimage')
     lines.append('cp bin/wkhtmlto* ../wkhtmltox-%s/bin' % version)
@@ -484,7 +623,8 @@ def build_linux_schroot(config, basedir):
     lines.append('cp ../../../include/wkhtmltox/*.h ../wkhtmltox-%s/include/wkhtmltox' % version)
     lines.append('cp ../../../include/wkhtmltox/dll*.inc ../wkhtmltox-%s/include/wkhtmltox' % version)
     lines.append('cd ..')
-    lines.append('tar -c -v --use-compress-program=xz -f ../wkhtmltox-%s_linux-%s.tar.xz wkhtmltox-%s/' % (version, config, version))
+    lines.append('tar -c -v -f ../wkhtmltox-%s_linux-%s.tar wkhtmltox-%s/' % (version, config, version))
+    lines.append('xz --compress -9 ../wkhtmltox-%s_linux-%s.tar' % (version, config))
     lines.append('# end of build script')
 
     open(script, 'w').write('\n'.join(lines))
@@ -494,23 +634,46 @@ def build_linux_schroot(config, basedir):
 
 # --------------------------------------------------------------- command line
 
-def usage():
-    print "Usage: scripts/build.py [target] where target is one of:\n *",
+def usage(exit_code=2):
+    print "Usage: scripts/build.py <target> [flags]\n\nThe supported targets and associated flags are:\n",
     opts = list(BUILDERS.keys())
+    size = 1 + max([len(opt) for opt in opts])
     opts.sort()
-    print '\n * '.join(opts)
-    sys.exit(0)
+    for opt in opts:
+        flags = BUILDER_FLAGS.get(BUILDERS[opt])
+        if flags:
+            print '* %s[-%s]' % (opt.ljust(size), '] [-'.join(flags))
+        else:
+            print '* %s' % opt.ljust(size)
+    size = max([len(key) for key in FLAG_HELP])
+    print "\nFlags:"
+    for flag in FLAG_HELP:
+        print "-%s: %s" % (flag.ljust(size), FLAG_HELP[flag])
+    sys.exit(exit_code)
 
 def main():
     basedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'static-build')
     mkdir_p(basedir)
 
-    if len(sys.argv) != 2 or sys.argv[1] not in BUILDERS:
-        usage()
+    if len(sys.argv) == 1:
+        usage(0)
 
     config = sys.argv[1]
+    if config not in BUILDERS:
+        usage()
+
+    args   = { 'config': config, 'basedir': os.path.realpath(basedir) }
+    flags  = BUILDER_FLAGS.get(BUILDERS[config]) or []
+
+    for arg in sys.argv[2:]:
+        if not arg.startswith('-') or arg[1:] not in flags:
+            usage()
+
+    for flag in flags:
+        args[flag.replace('-', '_')] = '-'+flag in sys.argv[2:]
+
     globals()['check_%s' % BUILDERS[config]](config)
-    globals()['build_%s' % BUILDERS[config]](config, os.path.realpath(basedir))
+    globals()['build_%s' % BUILDERS[config]](**args)
 
 if __name__ == '__main__':
     main()

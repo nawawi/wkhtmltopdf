@@ -28,6 +28,7 @@ if [ $# -ne 1 ]; then
 fi
 
 # install required packages
+apt-get update
 apt-get install --assume-yes git-core xz-utils build-essential mingw-w64 nsis debootstrap schroot rinse
 
 # create the directory which will hold the chroot environments
@@ -57,12 +58,23 @@ rm /bootstrap.sh
 EOF
 cp /srv/chroot-wkhtmltopdf/wheezy-amd64/bootstrap.sh         /srv/chroot-wkhtmltopdf/wheezy-i386/bootstrap.sh
 cp /srv/chroot-wkhtmltopdf/wheezy-amd64/etc/apt/sources.list /srv/chroot-wkhtmltopdf/wheezy-i386/etc/apt/sources.list
+<<<<<<< HEAD
 
 chroot         /srv/chroot-wkhtmltopdf/wheezy-amd64/ bash /bootstrap.sh
 linux32 chroot /srv/chroot-wkhtmltopdf/wheezy-i386/  bash /bootstrap.sh
 
 rm /srv/chroot-wkhtmltopdf/wheezy-amd64/var/cache/apt/archives/*.deb
 rm /srv/chroot-wkhtmltopdf/wheezy-i386/var/cache/apt/archives/*.deb
+=======
+chroot         /srv/chroot-wkhtmltopdf/wheezy-amd64/ apt-get update
+linux32 chroot /srv/chroot-wkhtmltopdf/wheezy-i386/  apt-get update
+chroot         /srv/chroot-wkhtmltopdf/wheezy-amd64/ apt-get dist-upgrade --assume-yes
+linux32 chroot /srv/chroot-wkhtmltopdf/wheezy-i386/  apt-get dist-upgrade --assume-yes
+chroot         /srv/chroot-wkhtmltopdf/wheezy-amd64/ apt-get install --assume-yes xz-utils
+linux32 chroot /srv/chroot-wkhtmltopdf/wheezy-i386/  apt-get install --assume-yes xz-utils
+chroot         /srv/chroot-wkhtmltopdf/wheezy-amd64/ apt-get build-dep --assume-yes libqt4-core
+linux32 chroot /srv/chroot-wkhtmltopdf/wheezy-i386/  apt-get build-dep --assume-yes libqt4-core
+>>>>>>> upstream/master
 
 # create chroots for Centos 5
 linux32 rinse --arch i386  --distribution centos-5 --directory /srv/chroot-wkhtmltopdf/centos5-i386
@@ -72,6 +84,7 @@ rinse         --arch amd64 --distribution centos-5 --directory /srv/chroot-wkhtm
 cat > /srv/chroot-wkhtmltopdf/centos5-amd64/bootstrap.sh <<EOF
 yum install -y wget
 wget http://dl.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm
+<<<<<<< HEAD
 rpm -i epel-release-5-4.noarch.rpm
 rm -f epel-release-5-4.noarch.rpm
 wget http://centos.karan.org/el5/ruby187/kbs-el5-ruby187.repo -O /etc/yum.repos.d/kbs-el5-rb187.repo
@@ -86,6 +99,19 @@ cp /srv/chroot-wkhtmltopdf/centos5-amd64/bootstrap.sh /srv/chroot-wkhtmltopdf/ce
 echo "exclude = *.i?86">>/srv/chroot-wkhtmltopdf/centos5-amd64/etc/yum.conf
 chroot         /srv/chroot-wkhtmltopdf/centos5-amd64 bash /bootstrap.sh
 linux32 chroot /srv/chroot-wkhtmltopdf/centos5-i386  bash /bootstrap.sh
+=======
+cp epel-release-5-4.noarch.rpm /srv/chroot-wkhtmltopdf/centos-5-amd64
+mv epel-release-5-4.noarch.rpm /srv/chroot-wkhtmltopdf/centos-5-i386
+chroot         /srv/chroot-wkhtmltopdf/centos-5-amd64 yum update -y
+linux32 chroot /srv/chroot-wkhtmltopdf/centos-5-i386  yum update -y
+chroot         /srv/chroot-wkhtmltopdf/centos-5-amd64 rpm -i /epel-release-5-4.noarch.rpm
+linux32 chroot /srv/chroot-wkhtmltopdf/centos-5-i386  rpm -i /epel-release-5-4.noarch.rpm
+echo "exclude = *.i?86">>/srv/chroot-wkhtmltopdf/centos-5-amd64/etc/yum.conf
+chroot         /srv/chroot-wkhtmltopdf/centos-5-amd64 yum install -y gcc gcc-c++ make qt4-devel openssl-devel diffutils perl xz
+linux32 chroot /srv/chroot-wkhtmltopdf/centos-5-i386  yum install -y gcc gcc-c++ make qt4-devel openssl-devel diffutils perl xz
+rm /srv/chroot-wkhtmltopdf/centos-5-i386/epel-release-5-4.noarch.rpm
+rm /srv/chroot-wkhtmltopdf/centos-5-amd64/epel-release-5-4.noarch.rpm
+>>>>>>> upstream/master
 
 # create schroot configuration
 cat > /etc/schroot/chroot.d/wkhtmltopdf <<EOF

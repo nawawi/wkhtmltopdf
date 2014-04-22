@@ -31,6 +31,9 @@
 #include <QNetworkDiskCache>
 #include <QTimer>
 #include <QUuid>
+#if QT_VERSION >= 0x050000
+#include <QUrlQuery>
+#endif
 
 namespace wkhtmltopdf {
 /*!
@@ -103,7 +106,7 @@ QNetworkReply * MyNetworkAccessManager::createRequest(Operation op, const QNetwo
 	if (settings.repeatCustomHeaders) {
 		typedef QPair<QString, QString> HT;
 		foreach (const HT & j, settings.customHeaders)
-			r3.setRawHeader(j.first.toAscii(), j.second.toAscii());
+			r3.setRawHeader(j.first.toLatin1(), j.second.toLatin1());
 	}
 	return QNetworkAccessManager::createRequest(op, r3, outgoingData);
 }
@@ -185,11 +188,9 @@ ResourceObject::ResourceObject(MultiPageLoaderPrivate & mpl, const QUrl & u, con
 		// to retrieve a web page, it's not needed to use a fully transparent
 		// http proxy. Moreover, the CONNECT() method is frequently disabled
 		// by proxies administrators.
-#if QT_VERSION >= 0x040500
 		if (settings.proxy.type == QNetworkProxy::HttpProxy)
 			proxy.setCapabilities(QNetworkProxy::CachingCapability |
 			                      QNetworkProxy::TunnelingCapability);
-#endif
 		if (!settings.proxy.user.isEmpty())
 			proxy.setUser(settings.proxy.user);
 		if (!settings.proxy.password.isEmpty())
@@ -415,10 +416,17 @@ void ResourceObject::load() {
 			postData.append("--\n");
 		}
 	} else {
+#if QT_VERSION >= 0x050000
+		QUrlQuery q;
+		foreach (const settings::PostItem & pi, settings.post)
+			q.addQueryItem(pi.name, pi.value);
+		postData = q.query(QUrl::FullyEncoded).toLocal8Bit();
+#else
 		QUrl u;
 		foreach (const settings::PostItem & pi, settings.post)
 			u.addQueryItem(pi.name, pi.value);
 		postData = u.encodedQuery();
+#endif
 	}
 
 
@@ -429,7 +437,7 @@ void ResourceObject::load() {
 	QNetworkRequest r = QNetworkRequest(url);
 	typedef QPair<QString, QString> HT;
 	foreach (const HT & j, settings.customHeaders)
-		r.setRawHeader(j.first.toAscii(), j.second.toAscii());
+		r.setRawHeader(j.first.toLatin1(), j.second.toLatin1());
 
 	if (postData.isEmpty())
 		webPage.mainFrame()->load(r);
@@ -634,7 +642,7 @@ QUrl MultiPageLoader::guessUrlFromString(const QString &string) {
 
 		QUrl url;
 		if (isAscii) {
-			url = QUrl::fromEncoded(urlStr.toAscii(), QUrl::TolerantMode);
+			url = QUrl::fromEncoded(urlStr.toLatin1(), QUrl::TolerantMode);
 		} else {
 			url = QUrl(urlStr, QUrl::TolerantMode);
 		}

@@ -194,8 +194,6 @@ PdfCommandLineParser::PdfCommandLineParser(PdfGlobal & s, QList<PdfObject> & ps)
 
 	extended(true);
  	qthack(false);
-	addarg("output-format",0, "Specify an output format to use pdf or ps, instead of looking at the extention of the output filename", new QStrSetter(s.outputFormat, "format"));
-
 	addarg("margin-bottom",'B',"Set the page bottom margin", new UnitRealSetter(s.margin.bottom,"unitreal"));
  	addarg("margin-left",'L',"Set the page left margin", new UnitRealSetter(s.margin.left,"unitreal"));
  	addarg("margin-right",'R',"Set the page right margin", new UnitRealSetter(s.margin.right,"unitreal"));
@@ -242,10 +240,8 @@ PdfCommandLineParser::PdfCommandLineParser(PdfGlobal & s, QList<PdfObject> & ps)
 	addWebArgs(od.web);
 	extended(true);
  	qthack(false);
-#if QT_VERSION >= 0x040500 //Not printing the background was added in QT4.5
  	addarg("no-background",0,"Do not print background", new ConstSetter<bool>(od.web.background, false));
  	addarg("background",0,"Do print background", new ConstSetter<bool>(od.web.background, true));
-#endif
 
 	extended(true);
  	qthack(true);
