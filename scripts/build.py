@@ -21,10 +21,9 @@
 
 QT5_URL = 'https://github.com/qtproject/qt5.git'
 OPENSSL = {
-    'repository': 'https://github.com/openssl/openssl.git',
-    'branch'    : 'OpenSSL_1_0_1-stable',
-    'tag'       : 'OpenSSL_1_0_1g',
-    'build'     : {
+    'url'   : 'http://www.openssl.org/source/openssl-1.0.1g.tar.gz',
+    'sha1'  : 'b28b3bcb1dc3ee7b55024c9f795be60eb3183e3c',
+    'build' : {
         'msvc*-win32*': {
             'configure' : 'VC-WIN32 no-asm',
             'debug'     : 'debug-VC-WIN32 no-asm',
@@ -227,7 +226,8 @@ BUILDERS = {
     'precise-i386':          'linux_schroot',
     'precise-amd64':         'linux_schroot',
     'mingw-w64-cross-win32': 'mingw64_cross',
-    'mingw-w64-cross-win64': 'mingw64_cross'
+    'mingw-w64-cross-win64': 'mingw64_cross',
+    'posix-local':           'posix_local'
 }
 
 CHROOT_SETUP  = {
@@ -303,7 +303,7 @@ deb-src http://archive.ubuntu.com/ubuntu/ precise-security main restricted unive
 
 # --------------------------------------------------------------- HELPERS
 
-import os, sys, platform, subprocess, shutil, re, fnmatch, multiprocessing
+import os, sys, platform, subprocess, shutil, re, fnmatch, multiprocessing, urllib, hashlib, tarfile
 
 from os.path import exists
 
@@ -348,6 +348,44 @@ def get_version(basedir):
         return (text, version)
     return ('%s-%s' % (version, hash), version)
 
+def qt_config(key, *opts):
+    input, output = [], []
+    input.extend(QT_CONFIG['common'])
+    input.extend(QT_CONFIG[key])
+    input.extend(opts)
+    cfg = os.environ.get('WKHTMLTOX_QT_CONFIG')
+    if cfg:
+        input.extend(cfg.split())
+    for arg in input:
+        if not arg.startswith('remove:-'):
+            output.append(arg)
+        elif arg[1+arg.index(':'):] in output:
+            output.remove(arg[1+arg.index(':'):])
+    return ' '.join(output)
+
+def download_file(url, dir, sha1):
+    name = url.split('/')[-1]
+    loc  = os.path.join(dir, name)
+    if os.path.exists(loc):
+        hash = hashlib.sha1(open(loc, 'rb').read()).hexdigest()
+        if hash != sha1:
+            error('Checksum mismatch for %s' % name)
+            os.remove(loc)
+        return loc
+    def hook(cnt, bs, total):
+        pct = int(cnt*bs*100/total)
+        sys.stdout.write("\rDownloading: %s [%d%%]" % (name, pct))
+        sys.stdout.flush()
+    urllib.urlretrieve(url, loc, reporthook=hook)
+    sys.stdout.write("\r")
+    sys.stdout.flush()
+    hash = hashlib.sha1(open(loc, 'rb').read()).hexdigest()
+    if hash != sha1:
+        error('Checksum mismatch for %s' % name)
+        os.remove(loc)
+    sys.stdout.write("\rDownloaded: %s [checksum OK]" % name)
+    return loc
+
 def build_openssl(config, basedir):
     cfg = None
     for key in OPENSSL['build']:
@@ -357,8 +395,10 @@ def build_openssl(config, basedir):
     if not cfg:
         return
 
-    srcdir = os.path.join(basedir, 'openssl')
-    dstdir = os.path.join(basedir, config, 'openssl')
+    dstdir   = os.path.join(basedir, config, 'openssl')
+    location = download_file(OPENSSL['url'], basedir, OPENSSL['sha1'])
+    relname  = os.path.basename(location)[:os.path.basename(location).index('.tar')]
+    srcdir   = os.path.join(basedir, relname)
 
     def is_compiled():
         compiled = exists(os.path.join(dstdir, 'include', 'openssl', 'ssl.h'))
@@ -366,23 +406,14 @@ def build_openssl(config, basedir):
             compiled = compiled and exists(os.path.join(dstdir, 'lib', lib))
         return compiled
 
-    if not exists(os.path.join(srcdir, '.git')):
-        rmdir(srcdir)
-        rmdir(dstdir)
-        os.chdir(basedir)
-        shell('git clone --branch %s --single-branch %s openssl' % (OPENSSL['branch'], OPENSSL['repository']))
-
-    os.chdir(srcdir)
-    shell('git clean -fdx')
-    shell('git reset --hard HEAD')
-    shell('git checkout %s' % (OPENSSL['tag']))
-
     if not is_compiled():
+        rmdir(srcdir)
+        tarfile.open(location).extractall(basedir)
+        os.chdir(srcdir)
         opts = OPENSSL['build'][cfg]
         shell('perl Configure --openssldir=%s %s' % (dstdir, opts['configure']))
         for cmd in opts['build']:
             shell(cmd)
-        shell('git clean -fdx')
         if not is_compiled():
             error("Unable to compile OpenSSL for your system, aborting.")
 
@@ -577,17 +608,14 @@ def build_msvc_common(config, basedir):
     mkdir_p(qtdir)
     mkdir_p(wkdir)
 
-    args = []
-    args.extend(QT_CONFIG['common'])
-    args.extend(QT_CONFIG['msvc'])
-    args.append('-I %s\\include' % ssldir)
-    args.append('-L %s\\lib' % ssldir)
-    args.append('OPENSSL_LIBS="-L%s -lssleay32 -llibeay32 %s"' % \
-        (ssldir.replace('\\', '\\\\'), ssl_libs))
+    configure_args = qt_config('msvc',
+        '-I %s\\include' % ssldir,
+        '-L %s\\lib' % ssldir,
+        'OPENSSL_LIBS="-L%s -lssleay32 -llibeay32 %s"' % (ssldir.replace('\\', '\\\\'), ssl_libs))
 
     os.chdir(qtdir)
     if not exists('is_configured'):
-        shell('%s\\..\\qt\\configure.exe %s' % (basedir, ' '.join(args)))
+        shell('%s\\..\\qt\\configure.exe %s' % (basedir, configure_args))
         open('is_configured', 'w').write('')
     shell('nmake')
 
@@ -651,13 +679,11 @@ def build_mingw64_cross(config, basedir):
     mkdir_p(qtdir)
     mkdir_p(wkdir)
 
-    args = []
-    args.extend(QT_CONFIG['common'])
-    args.extend(QT_CONFIG['mingw-w64-cross'])
-    args.append('--prefix=%s'   % qtdir)
-    args.append('-I %s/include' % ssldir)
-    args.append('-L %s/lib'     % ssldir)
-    args.append('-device-option CROSS_COMPILE=%s-' % MINGW_W64_PREFIX[rchop(config, '-dbg')])
+    configure_args = qt_config('mingw-w64-cross',
+        '--prefix=%s'   % qtdir,
+        '-I %s/include' % ssldir,
+        '-L %s/lib'     % ssldir,
+        '-device-option CROSS_COMPILE=%s-' % MINGW_W64_PREFIX[rchop(config, '-dbg')])
 
     os.environ['OPENSSL_LIBS'] = '-lssl -lcrypto -L %s/lib %s' % (ssldir, ssl_libs)
 
@@ -667,7 +693,7 @@ def build_mingw64_cross(config, basedir):
 =======
     os.chdir(build)
     if not exists('is_configured'):
-        shell('%s/../qt/configure %s' % (basedir, ' '.join(args)))
+        shell('%s/../qt/configure %s' % (basedir, configure_args))
         shell('touch is_configured')
 >>>>>>> upstream/master
     shell('make -j%d' % CPU_COUNT)
@@ -724,6 +750,7 @@ def build_linux_schroot(config, basedir):
     mkdir_p(os.path.join(dist, 'include', 'wkhtmltox'))
     mkdir_p(os.path.join(dist, 'lib'))
 
+<<<<<<< HEAD
     args = []
     args.extend(QT_CONFIG['common'])
     args.extend(QT_CONFIG['posix'])
@@ -732,6 +759,9 @@ def build_linux_schroot(config, basedir):
     wk_args = []
     wk_args.extend(WEBKIT_CONFIG['common'])
     wk_args.extend(WEBKIT_CONFIG['posix'])
+=======
+    configure_args = qt_config('posix', '--prefix=../qt')
+>>>>>>> upstream/master
 
     lines = ['#!/bin/bash']
     lines.append('# start of autogenerated build script')
@@ -746,7 +776,7 @@ def build_linux_schroot(config, basedir):
 =======
 
     lines.append('if [ ! -f is_configured ]; then')
-    lines.append('  ../../../qt/configure %s || exit 1' % ' '.join(args))
+    lines.append('  ../../../qt/configure %s || exit 1' % configure_args)
     lines.append('  touch is_configured')
     lines.append('fi')
 >>>>>>> upstream/master
@@ -787,6 +817,52 @@ def build_linux_schroot(config, basedir):
     os.chdir(dir)
     shell('chmod +x build.sh')
     shell('schroot -c wkhtmltopdf-%s -- ./build.sh' % rchop(config, '-dbg'))
+
+
+# -------------------------------------------------- POSIX local environment
+
+def check_posix_local(config):
+    pass
+
+def build_posix_local(config, basedir):
+    version, simple_version = get_version(basedir)
+
+    build  = os.path.join(basedir, config, 'qt_build')
+    app    = os.path.join(basedir, config, 'app')
+    qtdir  = os.path.join(basedir, config, 'qt')
+    dist   = os.path.join(basedir, config, 'wkhtmltox-%s' % version)
+
+    mkdir_p(build)
+    mkdir_p(app)
+
+    rmdir(dist)
+    mkdir_p(os.path.join(dist, 'bin'))
+    mkdir_p(os.path.join(dist, 'include', 'wkhtmltox'))
+    mkdir_p(os.path.join(dist, 'lib'))
+
+    os.chdir(build)
+    if not exists('is_configured'):
+        shell('../../../qt/configure %s' % qt_config('posix', '--prefix=../qt'))
+        shell('touch is_configured')
+
+    if subprocess.call(['make', '-j%d' % CPU_COUNT]):
+        shell('make -j%d' % CPU_COUNT)
+
+    shell('make install')
+
+    os.chdir(app)
+    shell('rm -f bin/*')
+    os.environ['WKHTMLTOX_VERSION'] = version
+    shell('../qt/bin/qmake ../../../wkhtmltopdf.pro')
+    shell('make -j%d' % CPU_COUNT)
+    shell('cp bin/wkhtmlto* ../wkhtmltox-%s/bin' % version)
+    shell('cp -P bin/libwkhtmltox*.so.* ../wkhtmltox-%s/lib' % version)
+    shell('cp ../../../include/wkhtmltox/*.h ../wkhtmltox-%s/include/wkhtmltox' % version)
+    shell('cp ../../../include/wkhtmltox/dll*.inc ../wkhtmltox-%s/include/wkhtmltox' % version)
+
+    os.chdir(basedir)
+    shell('tar -c -v -f ../wkhtmltox-%s_local-%s.tar wkhtmltox-%s/' % (version, platform.node(), version))
+    shell('xz --compress -9 ../wkhtmltox-%s_local-%s.tar' % (version, platform.node()))
 
 # --------------------------------------------------------------- command line
 
