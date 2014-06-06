@@ -19,6 +19,7 @@
 
 # --------------------------------------------------------------- CONFIGURATION
 
+<<<<<<< HEAD
 QT5_URL = 'https://github.com/qtproject/qt5.git'
 OPENSSL = {
     'url'   : 'http://www.openssl.org/source/openssl-1.0.1g.tar.gz',
@@ -53,6 +54,8 @@ OPENSSL = {
     }
 }
 
+=======
+>>>>>>> upstream/master
 QT_CONFIG = {
     'common' : [
         '-opensource',
@@ -65,9 +68,9 @@ QT_CONFIG = {
         '-no-webkit',
         '-exceptions',              # required by XmlPatterns
         '-xmlpatterns',             # required for TOC support
-        '-qt-zlib',                 # use bundled versions of libraries
-        '-qt-libpng',
-        '-qt-libjpeg',
+        '-system-zlib',
+        '-system-libpng',
+        '-system-libjpeg',
         '-no-libmng',
         '-no-libtiff',
         '-no-accessibility',
@@ -160,7 +163,11 @@ QT_CONFIG = {
         '-xrender',                 # xrender support is required
         '-openssl',                 # load OpenSSL binaries at runtime
         '-largefile',
-        '-rpath'
+        '-rpath',
+        'remove:-system-libpng',
+        'remove:-system-libjpeg',
+        '-qt-libpng',
+        '-qt-libjpeg'
     ]
 }
 
@@ -313,6 +320,128 @@ deb-src http://archive.ubuntu.com/ubuntu/ precise-security main restricted unive
     ]
 }
 
+DEPENDENT_LIBS = {
+    'openssl': {
+        'order' : 1,
+        'url'   : 'http://www.openssl.org/source/openssl-1.0.1g.tar.gz',
+        'sha1'  : 'b28b3bcb1dc3ee7b55024c9f795be60eb3183e3c',
+        'build' : {
+            'msvc*-win32*': {
+                'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
+                'commands': [
+                    'perl Configure --openssldir=%(destdir)s VC-WIN32 no-asm',
+                    'ms\\do_ms.bat',
+                    'nmake /f ms\\nt.mak install'],
+            },
+            'msvc*-win64*': {
+                'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
+                'commands': [
+                    'perl Configure --openssldir=%(destdir)s VC-WIN64A',
+                    'ms\\do_ms.bat',
+                    'nmake /f ms\\nt.mak install']
+            },
+            'mingw-w64-cross-win*': {
+                'result': ['include/openssl/ssl.h', 'lib/libssl.a', 'lib/libcrypto.a'],
+                'commands': [
+                    'perl Configure --openssldir=%(destdir)s --cross-compile-prefix=%(mingw-w64)s- no-shared no-asm mingw64',
+                    'make',
+                    'make install_sw']
+            }
+        }
+    },
+
+    'zlib': {
+        'order' : 2,
+        'url'   : 'http://downloads.sourceforge.net/libpng/zlib-1.2.8.tar.gz',
+        'sha1'  : 'a4d316c404ff54ca545ea71a27af7dbc29817088',
+        'build' : {
+            'msvc*': {
+                'result': {
+                    'include/zlib.h' : 'zlib.h',
+                    'include/zconf.h': 'zconf.h',
+                    'lib/zdll.lib'   : 'zlib.lib'
+                },
+                'replace':  [('win32/Makefile.msc', '-MD', '-MT')],
+                'commands': ['nmake /f win32/Makefile.msc zlib.lib']
+            },
+            'mingw-w64-cross-win*': {
+                'result': {
+                    'include/zlib.h' : 'zlib.h',
+                    'include/zconf.h': 'zconf.h',
+                    'lib/libz.a'     : 'libz.a'
+                },
+                'replace':  [('win32/Makefile.gcc', 'PREFIX =', 'PREFIX = %(mingw-w64)s-')],
+                'commands': ['make -f win32/Makefile.gcc']
+            }
+        }
+    },
+
+    'libpng': {
+        'order' : 3,
+        'url' : 'http://downloads.sourceforge.net/libpng/libpng-1.6.10.tar.gz',
+        'sha1': 'cf81cf7df631bbfa649600b9a45d966b6bccac25',
+        'build' : {
+            'msvc*': {
+                'result': {
+                    'include/png.h'       : 'png.h',
+                    'include/pngconf.h'   : 'pngconf.h',
+                    'include/pnglibconf.h': 'pnglibconf.h',
+                    'lib/libpng.lib'      : 'libpng.lib'
+                },
+                'replace': [
+                    ('scripts/makefile.vcwin32', '-MD', '-MT'),
+                    ('scripts/makefile.vcwin32', '-I..\\zlib', '-I..\\deplibs\\include'),
+                    ('scripts/makefile.vcwin32', '..\\zlib\\zlib.lib', '..\\deplibs\\lib\\zdll.lib')],
+                'commands': ['nmake /f scripts/makefile.vcwin32 libpng.lib']
+            },
+            'mingw-w64-cross-win*': {
+                'result': {
+                    'include/png.h'       : 'png.h',
+                    'include/pngconf.h'   : 'pngconf.h',
+                    'include/pnglibconf.h': 'pnglibconf.h',
+                    'lib/libpng.a'        : 'libpng.a'
+                },
+                'replace': [
+                    ('scripts/makefile.gcc', 'ZLIBINC = ../zlib', 'ZLIBINC = %(destdir)s/include'),
+                    ('scripts/makefile.gcc', 'ZLIBLIB = ../zlib', 'ZLIBLIB = %(destdir)s/lib'),
+                    ('scripts/makefile.gcc', 'CC = gcc', 'CC = %(mingw-w64)s-gcc'),
+                    ('scripts/makefile.gcc', 'AR_RC = ar', 'AR_RC = %(mingw-w64)s-ar'),
+                    ('scripts/makefile.gcc', 'RANLIB = ranlib', 'RANLIB = %(mingw-w64)s-ranlib')],
+                'commands': ['make -f scripts/makefile.gcc libpng.a']
+            }
+        }
+    },
+
+    'libjpeg': {
+        'order' : 4,
+        'url' : 'http://ijg.org/files/jpegsrc.v9a.tar.gz',
+        'sha1': 'd65ed6f88d318f7380a3a5f75d578744e732daca',
+        'build' : {
+            'msvc*': {
+                'result': {
+                    'include/jpeglib.h' : 'jpeglib.h',
+                    'include/jmorecfg.h': 'jmorecfg.h',
+                    'include/jerror.h'  : 'jerror.h',
+                    'include/jconfig.h' : 'jconfig.h',
+                    'lib/libjpeg.lib'   : 'libjpeg.lib'
+                },
+                'replace':  [('makefile.vc', '!include <win32.mak>', ''),
+                             ('makefile.vc', '$(cc)', 'cl'),
+                             ('makefile.vc', '$(cflags) $(cdebug) $(cvars)', '-c -nologo -D_CRT_SECURE_NO_DEPRECATE -MT -O2 -W3')],
+                'commands': [
+                    'copy /y jconfig.vc jconfig.h',
+                    'nmake /f makefile.vc libjpeg.lib']
+            },
+            'mingw-w64-cross-win*': {
+                'result': ['include/jpeglib.h', 'include/jmorecfg.h', 'include/jerror.h', 'include/jconfig.h', 'lib/libjpeg.a'],
+                'commands': [
+                    './configure --host=%(mingw-w64)s --disable-shared --prefix=%(destdir)s',
+                    'make install']
+            }
+        }
+    }
+}
+
 # --------------------------------------------------------------- HELPERS
 
 import os, sys, platform, subprocess, shutil, re, fnmatch, multiprocessing, urllib, hashlib, tarfile
@@ -326,8 +455,12 @@ def rchop(s, e):
         return s[:-len(e)]
     return s
 
+def message(msg):
+    sys.stdout.write(msg)
+    sys.stdout.flush()
+
 def error(msg):
-    print msg
+    message(msg+'\n')
     sys.exit(1)
 
 def shell(cmd):
@@ -338,7 +471,7 @@ def shell(cmd):
 def get_output(*cmd):
     try:
         return subprocess.check_output(cmd, stderr=subprocess.STDOUT).strip()
-    except subprocess.CalledProcessError:
+    except:
         return None
 
 def rmdir(path):
@@ -375,62 +508,82 @@ def qt_config(key, *opts):
             output.remove(arg[1+arg.index(':'):])
     return ' '.join(output)
 
-def download_file(url, dir, sha1):
+def download_file(url, sha1, dir):
     name = url.split('/')[-1]
     loc  = os.path.join(dir, name)
     if os.path.exists(loc):
         hash = hashlib.sha1(open(loc, 'rb').read()).hexdigest()
-        if hash != sha1:
-            error('Checksum mismatch for %s' % name)
-            os.remove(loc)
-        return loc
+        if hash == sha1:
+            return loc
+        os.remove(loc)
+        message('Checksum mismatch for %s, re-downloading.\n' % name)
     def hook(cnt, bs, total):
         pct = int(cnt*bs*100/total)
-        sys.stdout.write("\rDownloading: %s [%d%%]" % (name, pct))
-        sys.stdout.flush()
+        message("\rDownloading: %s [%d%%]" % (name, pct))
     urllib.urlretrieve(url, loc, reporthook=hook)
-    sys.stdout.write("\r")
-    sys.stdout.flush()
+    message("\r")
     hash = hashlib.sha1(open(loc, 'rb').read()).hexdigest()
     if hash != sha1:
-        error('Checksum mismatch for %s' % name)
         os.remove(loc)
-    sys.stdout.write("\rDownloaded: %s [checksum OK]\n" % name)
-    sys.stdout.flush()
+        error('Checksum mismatch for %s, aborting.' % name)
+    message("\rDownloaded: %s [checksum OK]\n" % name)
     return loc
 
-def build_openssl(config, basedir):
-    cfg = None
-    for key in OPENSSL['build']:
-        if fnmatch.fnmatch(config, key):
-            cfg = key
+def download_tarball(url, sha1, dir, name):
+    loc = download_file(url, sha1, dir)
+    tar = tarfile.open(loc)
+    sub = tar.getnames()[0]
+    if '/' in sub:
+        sub = sub[:sub.index('/')]
+    src = os.path.join(dir, sub)
+    tgt = os.path.join(dir, name)
+    rmdir(src)
+    tar.extractall(dir)
+    rmdir(tgt)
+    os.rename(src, tgt)
+    return tgt
 
-    if not cfg:
-        return
+def _is_compiled(dst, loc):
+    present = True
+    for name in loc['result']:
+        present = present and exists(os.path.join(dst, name))
+    return present
 
-    dstdir   = os.path.join(basedir, config, 'openssl')
-    location = download_file(OPENSSL['url'], basedir, OPENSSL['sha1'])
-    relname  = os.path.basename(location)[:os.path.basename(location).index('.tar')]
-    srcdir   = os.path.join(basedir, relname)
+def build_deplibs(config, basedir):
+    mkdir_p(os.path.join(basedir, config))
 
-    def is_compiled():
-        compiled = exists(os.path.join(dstdir, 'include', 'openssl', 'ssl.h'))
-        for lib in OPENSSL['build'][cfg]['libs']:
-            compiled = compiled and exists(os.path.join(dstdir, 'lib', lib))
-        return compiled
+    dstdir = os.path.join(basedir, config, 'deplibs')
+    vars   = {'destdir': dstdir, 'mingw-w64': MINGW_W64_PREFIX.get(rchop(config, '-dbg'), '')}
+    for lib in sorted(DEPENDENT_LIBS, key=lambda x: DEPENDENT_LIBS[x]['order']):
+        cfg = None
+        for key in DEPENDENT_LIBS[lib]['build']:
+            if fnmatch.fnmatch(config, key):
+                cfg = key
 
-    if not is_compiled():
-        rmdir(srcdir)
-        tarfile.open(location).extractall(basedir)
+        if not cfg or _is_compiled(dstdir, DEPENDENT_LIBS[lib]['build'][cfg]):
+            continue
+
+        build_cfg = DEPENDENT_LIBS[lib]['build'][cfg]
+        message('========== building: %s\n' % lib)
+        srcdir = download_tarball(DEPENDENT_LIBS[lib]['url'], DEPENDENT_LIBS[lib]['sha1'],
+                                  basedir, os.path.join(config, lib))
+
+        for location, source, target in build_cfg.get('replace', []):
+            data = open(os.path.join(srcdir, location), 'r').read()
+            open(os.path.join(srcdir, location), 'w').write(data.replace(source, target % vars))
+
         os.chdir(srcdir)
-        opts = OPENSSL['build'][cfg]
-        shell('perl Configure --openssldir=%s %s' % (dstdir, opts['configure']))
-        for cmd in opts['build']:
-            shell(cmd)
-        if not is_compiled():
-            error("Unable to compile OpenSSL for your system, aborting.")
+        for command in build_cfg['commands']:
+            shell(command % vars)
+        if not type(build_cfg['result']) is list:
+            for target in build_cfg['result']:
+                mkdir_p(os.path.dirname(os.path.join(dstdir, target)))
+                shutil.copy(build_cfg['result'][target], os.path.join(dstdir, target))
+        os.chdir(dstdir)
+        if not _is_compiled(dstdir, build_cfg):
+            error("Unable to compile %s for your system, aborting." % lib)
 
-    return OPENSSL['build'][cfg]['os_libs']
+        rmdir(srcdir)
 
 def check_running_on_debian():
     if not sys.platform.startswith('linux') or not exists('/etc/apt/sources.list'):
@@ -444,10 +597,11 @@ def check_running_on_debian():
 
 PACKAGE_NAME = re.compile(r'ii\s+(.+?)\s+.*')
 def install_packages(*names):
-    lines = get_output('dpkg-query', '--list', *names).split('\n')
+    lines = get_output('dpkg-query', '--list').split('\n')
     avail = [PACKAGE_NAME.match(line).group(1) for line in lines if PACKAGE_NAME.match(line)]
+    inst  = [name for name in names if name in avail]
 
-    if len(avail) != len(names):
+    if len(inst) != len(names):
         shell('apt-get update')
         shell('apt-get install --assume-yes %s' % (' '.join(names)))
 
@@ -457,21 +611,19 @@ ARCH = ['i386']
 
 def check_setup_schroot(config):
     check_running_on_debian()
-    login = get_output('logname') or os.environ.get('SUDO_USER')
-    if not login:
+    login = os.environ.get('SUDO_USER') or get_output('logname')
+    if not login or login == 'root':
         error('Unable to determine the login for which schroot access is to be given.')
 
-    if login == 'root':
-        error('Please run via sudo to determine login for which schroot access is to be given.')
-
 def build_setup_schroot(config, basedir):
-    install_packages('git', 'debootstrap', 'schroot', 'rinse')
+    install_packages('git', 'debootstrap', 'schroot', 'rinse', 'debian-archive-keyring')
 
-    login  = get_output('logname') or os.environ.get('SUDO_USER')
+    login  = os.environ.get('SUDO_USER') or get_output('logname')
     chroot = config[1+config.rindex('-'):]
     for arch in ARCH:
-        print '******************* %s-%s' % (chroot, arch)
-        root_dir = '/opt/wkhtmltopdf-build/%s-%s' % (chroot, arch)
+        message('******************* %s-%s\n' % (chroot, arch))
+        base_dir = os.environ.get('WKHTMLTOX_CHROOT') or '/var/chroot'
+        root_dir = os.path.join(base_dir, 'wkhtmltopdf-%s-%s' % (chroot, arch))
         rmdir(root_dir)
         mkdir_p(root_dir)
         for command in CHROOT_SETUP[chroot]:
@@ -514,7 +666,7 @@ def check_update_schroot(config):
 
 def build_update_schroot(config, basedir):
     for name in get_output('schroot', '--list').split('\n'):
-        print '******************* %s' % name[name.index('wkhtmltopdf-'):]
+        message('******************* %s\n' % name[name.index('wkhtmltopdf-'):])
         shell('schroot -c %s -- /bin/bash /update.sh' % name[name.index('wkhtmltopdf-'):])
 
 def check_setup_mingw64(config):
@@ -560,7 +712,7 @@ def build_msvc(config, basedir):
             vcarg = 'x86_amd64'
 
     python = sys.executable
-    process = subprocess.Popen('("%s" %s>nul)&&"%s" -c "import os; print repr(os.environ)"' % (
+    process = subprocess.Popen('("%s" %s>nul)&&"%s" -c "import os, sys; sys.stdout.write(repr(dict(os.environ)))"' % (
         os.path.join(vcdir, 'vcvarsall.bat'), vcarg, python), stdout=subprocess.PIPE, shell=True)
     stdout, _ = process.communicate()
     exitcode = process.wait()
@@ -594,7 +746,7 @@ def build_msvc_winsdk71(config, basedir):
         args = '/2008 /x86 %s' % mode
 
     python = sys.executable
-    process = subprocess.Popen('("%s" %s>nul)&&"%s" -c "import os; print repr(os.environ)"' % (
+    process = subprocess.Popen('("%s" %s>nul)&&"%s" -c "import os, sys; sys.stdout.write(repr(dict(os.environ)))"' % (
         setenv, args, python), stdout=subprocess.PIPE, shell=True)
     stdout, _ = process.communicate()
     exitcode = process.wait()
@@ -607,8 +759,9 @@ def build_msvc_winsdk71(config, basedir):
 
 def build_msvc_common(config, basedir):
     version, simple_version = get_version(basedir)
-    ssl_libs = build_openssl(config, basedir)
+    build_deplibs(config, basedir)
 
+<<<<<<< HEAD
     qt5dir = os.path.join(basedir, 'qt5')
     if not exists(os.path.join(qt5dir, '.git')):
         rmdir(qt5dir)
@@ -616,15 +769,18 @@ def build_msvc_common(config, basedir):
         shell('git clone %s qt5' % QT5_URL)
 
     ssldir = os.path.join(basedir, config, 'openssl')
+=======
+    libdir = os.path.join(basedir, config, 'deplibs')
+>>>>>>> upstream/master
     qtdir  = os.path.join(basedir, config, 'qt')
     wkdir  = os.path.join(basedir, config, 'webkit')
     mkdir_p(qtdir)
     mkdir_p(wkdir)
 
     configure_args = qt_config('msvc',
-        '-I %s\\include' % ssldir,
-        '-L %s\\lib' % ssldir,
-        'OPENSSL_LIBS="-L%s -lssleay32 -llibeay32 %s"' % (ssldir.replace('\\', '\\\\'), ssl_libs))
+        '-I %s\\include' % libdir,
+        '-L %s\\lib' % libdir,
+        'OPENSSL_LIBS="-L%s\\\\lib -lssleay32 -llibeay32 -lUser32 -lAdvapi32 -lGdi32 -lCrypt32"' % libdir.replace('\\', '\\\\'))
 
     os.chdir(qtdir)
     if not exists('is_configured'):
@@ -669,7 +825,7 @@ def build_msvc_common(config, basedir):
                 (makensis, version, simple_version, config))
 
     if not found:
-        print "\n\nCould not build installer as NSIS was not found."
+        message("\n\nCould not build installer as NSIS was not found.\n")
 
 # ------------------------------------------------ MinGW-W64 Cross Environment
 
@@ -683,9 +839,9 @@ def check_mingw64_cross(config):
 
 def build_mingw64_cross(config, basedir):
     version, simple_version = get_version(basedir)
-    ssl_libs = build_openssl(config, basedir)
+    build_deplibs(config, basedir)
 
-    ssldir = os.path.join(basedir, config, 'openssl')
+    libdir = os.path.join(basedir, config, 'deplibs')
     qtdir  = os.path.join(basedir, config, 'qt')
     wkdir  = os.path.join(basedir, config, 'webkit')
 
@@ -697,11 +853,11 @@ def build_mingw64_cross(config, basedir):
 >>>>>>> upstream/master
     configure_args = qt_config('mingw-w64-cross',
         '--prefix=%s'   % qtdir,
-        '-I %s/include' % ssldir,
-        '-L %s/lib'     % ssldir,
+        '-I %s/include' % libdir,
+        '-L %s/lib'     % libdir,
         '-device-option CROSS_COMPILE=%s-' % MINGW_W64_PREFIX[rchop(config, '-dbg')])
 
-    os.environ['OPENSSL_LIBS'] = '-lssl -lcrypto -L %s/lib %s' % (ssldir, ssl_libs)
+    os.environ['OPENSSL_LIBS'] = '-lssl -lcrypto -L %s/lib -lws2_32 -lgdi32 -lcrypt32' % libdir
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -877,6 +1033,7 @@ def build_posix_local(config, basedir):
     app    = os.path.join(basedir, config, 'app')
     qtdir  = os.path.join(basedir, config, 'qt')
     dist   = os.path.join(basedir, config, 'wkhtmltox-%s' % version)
+    make   = get_output('which gmake') and 'gmake' or 'make'
 
     mkdir_p(qt)
     mkdir_p(app)
@@ -891,14 +1048,14 @@ def build_posix_local(config, basedir):
         shell('../../../qt/configure %s' % qt_config('posix', '--prefix=%s' % qtdir))
         shell('touch is_configured')
 
-    if subprocess.call(['make', '-j%d' % CPU_COUNT]):
-        shell('make -j%d' % CPU_COUNT)
+    if subprocess.call([make, '-j%d' % CPU_COUNT]):
+        shell('%s -j%d' % (make, CPU_COUNT))
 
     os.chdir(app)
     shell('rm -f bin/*')
     os.environ['WKHTMLTOX_VERSION'] = version
     shell('../qt/bin/qmake ../../../wkhtmltopdf.pro')
-    shell('make -j%d' % CPU_COUNT)
+    shell('%s -j%d' % (make, CPU_COUNT))
     shell('cp bin/wkhtmlto* ../wkhtmltox-%s/bin' % version)
     shell('cp -P bin/libwkhtmltox*.so.* ../wkhtmltox-%s/lib' % version)
     shell('cp ../../../include/wkhtmltox/*.h ../wkhtmltox-%s/include/wkhtmltox' % version)
@@ -984,11 +1141,11 @@ def build_osx(config, basedir):
 # --------------------------------------------------------------- command line
 
 def usage(exit_code=2):
-    print "Usage: scripts/build.py <target> [-clean] [-debug]\n\nThe supported targets are:\n",
+    message("Usage: scripts/build.py <target> [-clean] [-debug]\n\nThe supported targets are:\n")
     opts = list(BUILDERS.keys())
     opts.sort()
     for opt in opts:
-        print '* %s' % opt
+        message('* %s\n' % opt)
     sys.exit(exit_code)
 
 def main():
@@ -1008,16 +1165,8 @@ def main():
 
     final_config = config
     if '-debug' in sys.argv[2:]:
-        # use the debug OpenSSL configuration if possible
-        ssl = OPENSSL['build']
-        for key in ssl:
-            if fnmatch.fnmatch(config, key) and 'debug' in ssl[key]:
-                ssl[key]['configure'] = ssl[key]['debug']
-        # use a debug build of QT and WebKit
-        cfg = QT_CONFIG['common']
-        cfg[cfg.index('-release')] = '-debug'
-        cfg[cfg.index('-webkit')]  = '-webkit-debug'
         final_config += '-dbg'
+        QT_CONFIG['common'].extend(['remove:-release', 'remove:-webkit', '-debug', '-webkit-debug'])
 
     if '-clean' in sys.argv[2:]:
         rmdir(os.path.join(basedir, config))
