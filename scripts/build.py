@@ -117,7 +117,7 @@ QT_CONFIG = {
         '-silent',                  # perform a silent build
         '-xrender',                 # xrender support is required
         '-largefile',
-        '-rpath',
+        '-no-rpath',
         '-openssl',                 # load OpenSSL binaries at runtime
         '-no-dbus',
         '-no-nis',
@@ -163,7 +163,7 @@ QT_CONFIG = {
         '-xrender',                 # xrender support is required
         '-openssl',                 # load OpenSSL binaries at runtime
         '-largefile',
-        '-rpath',
+        '-no-rpath',
         'remove:-system-libpng',
         'remove:-system-libjpeg',
         '-qt-libpng',
@@ -215,6 +215,7 @@ WEBKIT_CONFIG = {
 }
 
 BUILDERS = {
+    'source-tarball':        'source_tarball',
     'msvc2008-win32':        'msvc',
     'msvc2008-win64':        'msvc',
     'msvc2010-win32':        'msvc',
@@ -253,16 +254,14 @@ CHROOT_SETUP  = {
     'wheezy': [
         ('debootstrap', 'wheezy', 'http://ftp.us.debian.org/debian/'),
         ('write_file', 'etc/apt/sources.list', """
-deb     http://ftp.debian.org/debian/ wheezy         main contrib non-free
-deb     http://ftp.debian.org/debian/ wheezy-updates main contrib non-free
-deb     http://security.debian.org/   wheezy/updates main contrib non-free
-deb-src http://ftp.debian.org/debian/ wheezy         main contrib non-free
-deb-src http://ftp.debian.org/debian/ wheezy-updates main contrib non-free
-deb-src http://security.debian.org/   wheezy/updates main contrib non-free"""),
+deb http://ftp.debian.org/debian/ wheezy         main contrib non-free
+deb http://ftp.debian.org/debian/ wheezy-updates main contrib non-free
+deb http://security.debian.org/   wheezy/updates main contrib non-free"""),
         ('shell', 'apt-get update'),
         ('shell', 'apt-get dist-upgrade --assume-yes'),
-        ('shell', 'apt-get install --assume-yes xz-utils'),
-        ('shell', 'apt-get build-dep --assume-yes libqt4-core'),
+        ('shell', 'apt-get install --assume-yes xz-utils libssl-dev libpng-dev libjpeg8-dev zlib1g-dev rubygems'),
+        ('shell', 'apt-get install --assume-yes libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxrender-dev'),
+        ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
         ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\n'),
         ('schroot_conf', 'Debian Wheezy')
     ],
@@ -270,16 +269,14 @@ deb-src http://security.debian.org/   wheezy/updates main contrib non-free"""),
     'trusty': [
         ('debootstrap', 'trusty', 'http://archive.ubuntu.com/ubuntu/'),
         ('write_file', 'etc/apt/sources.list', """
-deb     http://archive.ubuntu.com/ubuntu/ trusty          main restricted universe multiverse
-deb     http://archive.ubuntu.com/ubuntu/ trusty-updates  main restricted universe multiverse
-deb     http://archive.ubuntu.com/ubuntu/ trusty-security main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu/ trusty          main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu/ trusty-updates  main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu/ trusty-security main restricted universe multiverse"""),
+deb http://archive.ubuntu.com/ubuntu/ trusty          main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ trusty-updates  main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ trusty-security main restricted universe multiverse"""),
         ('shell', 'apt-get update'),
         ('shell', 'apt-get dist-upgrade --assume-yes'),
-        ('shell', 'apt-get install --assume-yes xz-utils'),
-        ('shell', 'apt-get build-dep --assume-yes libqt4-core'),
+        ('shell', 'apt-get install --assume-yes xz-utils libssl-dev libpng-dev libjpeg-turbo8-dev zlib1g-dev ruby-dev'),
+        ('shell', 'apt-get install --assume-yes libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxrender-dev'),
+        ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
         ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\n'),
         ('schroot_conf', 'Ubuntu Trusty')
     ],
@@ -287,25 +284,32 @@ deb-src http://archive.ubuntu.com/ubuntu/ trusty-security main restricted univer
     'precise': [
         ('debootstrap', 'precise', 'http://archive.ubuntu.com/ubuntu/'),
         ('write_file', 'etc/apt/sources.list', """
-deb     http://archive.ubuntu.com/ubuntu/ precise          main restricted universe multiverse
-deb     http://archive.ubuntu.com/ubuntu/ precise-updates  main restricted universe multiverse
-deb     http://archive.ubuntu.com/ubuntu/ precise-security main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu/ precise          main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu/ precise-updates  main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu/ precise-security main restricted universe multiverse"""),
+deb http://archive.ubuntu.com/ubuntu/ precise          main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ precise-updates  main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ precise-security main restricted universe multiverse"""),
         ('shell', 'apt-get update'),
         ('shell', 'apt-get dist-upgrade --assume-yes'),
-        ('shell', 'apt-get install --assume-yes xz-utils'),
-        ('shell', 'apt-get build-dep --assume-yes libqt4-core'),
+        ('shell', 'apt-get install --assume-yes xz-utils libssl-dev libpng-dev libjpeg8-dev zlib1g-dev rubygems'),
+        ('shell', 'apt-get install --assume-yes libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxrender-dev'),
+        ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
         ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\n'),
         ('schroot_conf', 'Ubuntu Precise')
     ],
 
     'centos5': [
         ('rinse', 'centos-5'),
+        ('write_file', 'etc/yum.repos.d/kbs-el5-rb187.repo', """
+[kbs-el5-rb187]
+name=kbs-el5-rb187
+enabled=1
+baseurl=http://centos.karan.org/el$releasever/ruby187/$basearch/
+gpgcheck=1
+gpgkey=http://centos.karan.org/RPM-GPG-KEY-karan.org.txt"""),
         ('shell', 'yum update -y'),
         ('append_file:amd64', 'etc/yum.conf', 'exclude = *.i?86\n'),
-        ('shell', 'yum install -y gcc gcc-c++ make qt4-devel openssl-devel diffutils perl xz'),
+        ('shell', 'yum install -y gcc gcc-c++ make diffutils perl xz ruby-devel rubygems rpm-build'),
+        ('shell', 'yum install -y openssl-devel libX11-devel libXrender-devel libXext-devel fontconfig-devel freetype-devel libjpeg-devel libpng-devel zlib-devel'),
+        ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
         ('write_file', 'update.sh', 'yum update -y\n'),
         ('schroot_conf', 'CentOS 5')
     ],
@@ -314,7 +318,9 @@ deb-src http://archive.ubuntu.com/ubuntu/ precise-security main restricted unive
         ('rinse', 'centos-6'),
         ('shell', 'yum update -y'),
         ('append_file:amd64', 'etc/yum.conf', 'exclude = *.i?86\n'),
-        ('shell', 'yum install -y gcc gcc-c++ make qt4-devel openssl-devel diffutils perl tar xz'),
+        ('shell', 'yum install -y gcc gcc-c++ make diffutils perl tar xz ruby-devel rubygems rpm-build'),
+        ('shell', 'yum install -y openssl-devel libX11-devel libXrender-devel libXext-devel fontconfig-devel freetype-devel libjpeg-devel libpng-devel zlib-devel'),
+        ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
         ('write_file', 'update.sh', 'yum update -y\n'),
         ('schroot_conf', 'CentOS 6')
     ]
@@ -323,8 +329,8 @@ deb-src http://archive.ubuntu.com/ubuntu/ precise-security main restricted unive
 DEPENDENT_LIBS = {
     'openssl': {
         'order' : 1,
-        'url'   : 'http://www.openssl.org/source/openssl-1.0.1g.tar.gz',
-        'sha1'  : 'b28b3bcb1dc3ee7b55024c9f795be60eb3183e3c',
+        'url'   : 'http://www.openssl.org/source/openssl-1.0.1h.tar.gz',
+        'sha1'  : 'b2239599c8bf8f7fc48590a55205c26abe560bf8',
         'build' : {
             'msvc*-win32*': {
                 'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
@@ -337,7 +343,7 @@ DEPENDENT_LIBS = {
                 'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
                 'commands': [
                     'perl Configure --openssldir=%(destdir)s VC-WIN64A',
-                    'ms\\do_ms.bat',
+                    'ms\\do_win64a.bat',
                     'nmake /f ms\\nt.mak install']
             },
             'mingw-w64-cross-win*': {
@@ -378,8 +384,8 @@ DEPENDENT_LIBS = {
 
     'libpng': {
         'order' : 3,
-        'url' : 'http://downloads.sourceforge.net/libpng/libpng-1.6.10.tar.gz',
-        'sha1': 'cf81cf7df631bbfa649600b9a45d966b6bccac25',
+        'url' : 'http://downloads.sourceforge.net/libpng/libpng-1.5.18.tar.gz',
+        'sha1': '7ddf6865aa70d2d79faf65ebc611919a0b573654',
         'build' : {
             'msvc*': {
                 'result': {
@@ -442,6 +448,36 @@ DEPENDENT_LIBS = {
     }
 }
 
+EXCLUDE_SRC_TARBALL = [
+    'qt/config.profiles*',
+    'qt/demos*',
+    'qt/dist*',
+    'qt/doc*',
+    'qt/examples*',
+    'qt/imports*',
+    'qt/templates*',
+    'qt/tests*',
+    'qt/translations*',
+    'qt/util*',
+    'qt/lib/fonts*',
+    'qt/src/3rdparty/*ChangeLog*',
+    'qt/src/3rdparty/ce-compat*',
+    'qt/src/3rdparty/clucene*',
+    'qt/src/3rdparty/fonts*',
+    'qt/src/3rdparty/freetype*',
+    'qt/src/3rdparty/javascriptcore*',
+    'qt/src/3rdparty/libgq*',
+    'qt/src/3rdparty/libmng*',
+    'qt/src/3rdparty/libtiff*',
+    'qt/src/3rdparty/patches*',
+    'qt/src/3rdparty/phonon*',
+    'qt/src/3rdparty/pixman*',
+    'qt/src/3rdparty/powervr*',
+    'qt/src/3rdparty/ptmalloc*',
+    'qt/src/3rdparty/s60*',
+    'qt/src/3rdparty/wayland*'
+]
+
 # --------------------------------------------------------------- HELPERS
 
 import os, sys, platform, subprocess, shutil, re, fnmatch, multiprocessing, urllib, hashlib, tarfile
@@ -476,6 +512,8 @@ def get_output(*cmd):
 
 def rmdir(path):
     if exists(path):
+        if platform.system() == 'Windows':
+            shell('attrib -R %s\* /S' % path)
         shutil.rmtree(path)
 
 def mkdir_p(path):
@@ -483,6 +521,7 @@ def mkdir_p(path):
         os.makedirs(path)
 
 def get_version(basedir):
+    mkdir_p(basedir)
     text = open(os.path.join(basedir, '..', 'VERSION'), 'r').read()
     if '-' not in text:
         return (text, text)
@@ -617,6 +656,7 @@ def check_setup_schroot(config):
 
 def build_setup_schroot(config, basedir):
     install_packages('git', 'debootstrap', 'schroot', 'rinse', 'debian-archive-keyring')
+    os.environ['HOME'] = '/tmp' # workaround bug in gem when home directory doesn't exist
 
     login  = os.environ.get('SUDO_USER') or get_output('logname')
     chroot = config[1+config.rindex('-'):]
@@ -674,6 +714,35 @@ def check_setup_mingw64(config):
 
 def build_setup_mingw64(config, basedir):
     install_packages('build-essential', 'mingw-w64', 'nsis')
+
+def check_source_tarball(config):
+    if not get_output('git', 'rev-parse', '--short', 'HEAD'):
+        error("This can only be run inside a git checkout.")
+
+    if not exists(os.path.join(os.getcwd(), 'qt', '.git')):
+        error("Please initialize and download the Qt submodule before running this.")
+
+def _filter_tar(info):
+    name = info.name[1+info.name.index('/'):]
+    if name.endswith('.git') or [p for p in EXCLUDE_SRC_TARBALL if fnmatch.fnmatch(name, p)]:
+        return None
+
+    info.uid   = info.gid   = 1000
+    info.uname = info.gname = 'wkhtmltopdf'
+    return info
+
+def build_source_tarball(config, basedir):
+    version, simple_version = get_version(basedir)
+    root_dir = os.path.realpath(os.path.join(basedir, '..'))
+    os.chdir(os.path.join(root_dir, 'qt'))
+    shell('git clean -fdx')
+    shell('git reset --hard HEAD')
+    os.chdir(root_dir)
+    shell('git clean -fdx')
+    shell('git reset --hard HEAD')
+    shell('git submodule update')
+    with tarfile.open('wkhtmltox-%s.tar.bz2' % version, 'w:bz2') as tar:
+        tar.add('.', 'wkhtmltox-%s/' % version, filter=_filter_tar)
 
 # --------------------------------------------------------------- MSVC (2008-2013)
 
@@ -924,16 +993,17 @@ def build_linux_schroot(config, basedir):
     dist   = os.path.join(dir, 'wkhtmltox-%s' % version)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     mkdir_p(os.path.join(dir, 'qt'))
     mkdir_p(os.path.join(dir, 'webkit'))
     mkdir_p(os.path.join(dir, 'app'))
 
 =======
 >>>>>>> upstream/master
+=======
+    mkdir_p(dir)
+>>>>>>> upstream/master
     rmdir(dist)
-    mkdir_p(os.path.join(dist, 'bin'))
-    mkdir_p(os.path.join(dist, 'include', 'wkhtmltox'))
-    mkdir_p(os.path.join(dist, 'lib'))
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1004,6 +1074,7 @@ def build_linux_schroot(config, basedir):
     lines.append('rm -f bin/*')
     lines.append('export WKHTMLTOX_VERSION=%s' % version)
     lines.append('../qt/bin/qmake ../../../wkhtmltopdf.pro')
+<<<<<<< HEAD
 >>>>>>> upstream/master
     lines.append('make -j%d || exit 1' % CPU_COUNT)
     lines.append('strip bin/wkhtmltopdf bin/wkhtmltoimage')
@@ -1011,6 +1082,9 @@ def build_linux_schroot(config, basedir):
     lines.append('cp -P bin/libwkhtmltox*.so.* ../wkhtmltox-%s/lib' % version)
     lines.append('cp ../../../include/wkhtmltox/*.h ../wkhtmltox-%s/include/wkhtmltox' % version)
     lines.append('cp ../../../include/wkhtmltox/dll*.inc ../wkhtmltox-%s/include/wkhtmltox' % version)
+=======
+    lines.append('make install INSTALL_ROOT=%s || exit 1' % dist)
+>>>>>>> upstream/master
     lines.append('cd ..')
     lines.append('tar -c -v -f ../wkhtmltox-%s_linux-%s.tar wkhtmltox-%s/' % (version, config, version))
     lines.append('xz --compress --force --verbose -9 ../wkhtmltox-%s_linux-%s.tar' % (version, config))
@@ -1067,41 +1141,25 @@ def build_posix_local(config, basedir):
 
 # --------------------------------------------------------------- OS X
 
-OSX_CONFIG = {
-    'osx-10.6-carbon-i386':  '-carbon  -platform macx-g++42',
-    'osx-10.7-carbon-i386':  '-carbon  -platform unsupported/macx-clang -reduce-exports',
-    'osx-10.8-carbon-i386':  '-carbon  -platform unsupported/macx-clang -reduce-exports',
-    'osx-10.9-carbon-i386':  '-carbon  -platform unsupported/macx-clang -reduce-exports',
-    'osx-10.7-cocoa-x86-64': '-cocoa   -platform unsupported/macx-clang',
-    'osx-10.8-cocoa-x86-64': '-cocoa   -platform unsupported/macx-clang',
-    'osx-10.9-cocoa-x86-64': '-cocoa   -platform unsupported/macx-clang-libc++'
-}
-
 def check_osx(config):
     if not platform.system() == 'Darwin' or not platform.mac_ver()[0]:
         error('This can only be run on a OS X system!')
 
-    osxver = platform.mac_ver()[0][:platform.mac_ver()[0].rindex('.')]
-    osxcfg = config.replace('osx-', 'osx-%s-' % osxver)
-    if not osxcfg in OSX_CONFIG:
-        error('This target is not supported: %s' % osxcfg)
-    if 'carbon' in osxcfg and osxver != '10.6':
-        sdk_dir = get_output('xcodebuild', '-sdk', 'macosx10.6', '-version', 'Path')
-        if not sdk_dir:
-            error('Unable to find OS X 10.6 SDK for the carbon build, aborting.')
-        if not os.path.isfile('%s/usr/lib/libstdc++.dylib' % sdk_dir):
-            error('Symlink for libstdc++.dylib has not been created, aborting.')
+    if not get_output('xcode-select', '--print-path'):
+        error('Xcode is not installed, aborting.')
 
 def build_osx(config, basedir):
     version, simple_version = get_version(basedir)
 
-    osxver = platform.mac_ver()[0][:platform.mac_ver()[0].rindex('.')]
-    osxcfg = config.replace('osx-', 'osx-%s-' % osxver)
-    args   = OSX_CONFIG[osxcfg]
-    flags  = ''
+    osxver    = platform.mac_ver()[0][:platform.mac_ver()[0].rindex('.')]
+    framework = config.split('-')[1]
+    if osxver == '10.6':
+        osxcfg = '-%s -platform macx-g++42' % framework
+    else:
+        osxcfg = '-%s -platform unsupported/macx-clang' % framework
 
-    if 'carbon' in osxcfg and osxver != '10.6':
-        args += ' -sdk %s' % get_output('xcodebuild', '-sdk', 'macosx10.6', '-version', 'Path')
+    flags = ''
+    if framework == 'carbon' and osxver != '10.6':
         for item in ['CFLAGS', 'CXXFLAGS']:
             flags += '"QMAKE_%s += %s" ' % (item, '-fvisibility=hidden -fvisibility-inlines-hidden')
 
@@ -1119,7 +1177,7 @@ def build_osx(config, basedir):
 
     os.chdir(qt)
     if not exists('is_configured'):
-        shell('../../../qt/configure %s' % qt_config('osx', '--prefix=%s' % qt, args))
+        shell('../../../qt/configure %s' % qt_config('osx', '--prefix=%s' % qt, osxcfg))
         shell('touch is_configured')
 
     shell('make -j%d' % CPU_COUNT)
@@ -1129,14 +1187,23 @@ def build_osx(config, basedir):
     os.environ['WKHTMLTOX_VERSION'] = version
     shell('../qt/bin/qmake %s ../../../wkhtmltopdf.pro' % flags)
     shell('make -j%d' % CPU_COUNT)
+
+    if osxver not in ['10.6', '10.7']:
+        for item in ['wkhtmltoimage', 'wkhtmltopdf', 'libwkhtmltox.%s.dylib' % simple_version]:
+            shell(' '.join([
+                'install_name_tool', '-change',
+                '/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText',
+                '/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework/CoreText',
+                'bin/'+item]))
+
     shell('cp bin/wkhtmlto* ../wkhtmltox-%s/bin' % version)
     shell('cp -P bin/libwkhtmltox*.dylib* ../wkhtmltox-%s/lib' % version)
     shell('cp ../../../include/wkhtmltox/*.h ../wkhtmltox-%s/include/wkhtmltox' % version)
     shell('cp ../../../include/wkhtmltox/dll*.inc ../wkhtmltox-%s/include/wkhtmltox' % version)
 
     os.chdir(os.path.join(basedir, config))
-    shell('tar -c -v -f ../wkhtmltox-%s_%s.tar wkhtmltox-%s/' % (version, osxcfg, version))
-    shell('xz --compress --force --verbose -9 ../wkhtmltox-%s_%s.tar' % (version, osxcfg))
+    shell('tar -c -v -f ../wkhtmltox-%s_%s.tar wkhtmltox-%s/' % (version, config, version))
+    shell('xz --compress --force --verbose -9 ../wkhtmltox-%s_%s.tar' % (version, config))
 
 # --------------------------------------------------------------- command line
 
@@ -1149,9 +1216,8 @@ def usage(exit_code=2):
     sys.exit(exit_code)
 
 def main():
-    basedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'static-build')
-    mkdir_p(basedir)
-
+    rootdir = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+    basedir = os.path.join(rootdir, 'static-build')
     if len(sys.argv) == 1:
         usage(0)
 
@@ -1171,8 +1237,9 @@ def main():
     if '-clean' in sys.argv[2:]:
         rmdir(os.path.join(basedir, config))
 
+    os.chdir(rootdir)
     globals()['check_%s' % BUILDERS[config]](final_config)
-    globals()['build_%s' % BUILDERS[config]](final_config, os.path.realpath(basedir))
+    globals()['build_%s' % BUILDERS[config]](final_config, basedir)
 
 if __name__ == '__main__':
     main()
