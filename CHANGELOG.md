@@ -1,7 +1,15 @@
-v0.12.1 (unreleased)
+v0.12.2 (unreleased)
+--------------------
+* **#1676**: do not allow overriding the header/footer settings for cover pages
+* **#1676**: set page margins correctly via computed header/footer heights for multiple URLs
+* **#1758**: fix corrupt image when output is specified as "-" in wkhtmltoimage on Windows
+* **#1772**: added variable 'isodate' for substitution in headers/footers
+* **#1808**: fix [sitepage] and [sitepages] not working without HTML headers/footers
+
+v0.12.1 (2014-06-26)
 --------------------
 * removed support for PostScript output which is not supported in QT5
-* use OpenSSL 1.0.1g for the Windows builds
+* use OpenSSL 1.0.1h for the Windows builds
 * **#1502**: fix spurious "exit with code 1 due to http error: 1xxx" errors
 * **#1504**: **[qt]** fix rendering issues for JPEG with XMP metadata
 * **#1507**: **[qt]** fix crash when CSS widows are specified
@@ -22,7 +30,7 @@ v0.12.1 (unreleased)
 * update URLs in the internal documentation
 * generate API documentation for libwkhtmltox (on the website)
 * display version in compiled binary properly under various scenarios
-* complete revamp of the build system
+* complete revamp of the build system, which now generates native packages on all platforms
 
 v0.12.0 (2014-02-06)
 --------------------

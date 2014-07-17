@@ -20,6 +20,7 @@
 # --------------------------------------------------------------- CONFIGURATION
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 QT5_URL = 'https://github.com/qtproject/qt5.git'
 OPENSSL = {
     'url'   : 'http://www.openssl.org/source/openssl-1.0.1g.tar.gz',
@@ -55,6 +56,44 @@ OPENSSL = {
 }
 
 =======
+>>>>>>> upstream/master
+=======
+BUILDERS = {
+    'source-tarball':        'source_tarball',
+    'msvc2008-win32':        'msvc',
+    'msvc2008-win64':        'msvc',
+    'msvc2010-win32':        'msvc',
+    'msvc2010-win64':        'msvc',
+    'msvc2012-win32':        'msvc',
+    'msvc2012-win64':        'msvc',
+    'msvc2013-win32':        'msvc',
+    'msvc2013-win64':        'msvc',
+    'msvc-winsdk71-win32':   'msvc_winsdk71',
+    'msvc-winsdk71-win64':   'msvc_winsdk71',
+    'setup-mingw-w64':       'setup_mingw64',
+    'setup-schroot-centos5': 'setup_schroot',
+    'setup-schroot-centos6': 'setup_schroot',
+    'setup-schroot-wheezy':  'setup_schroot',
+    'setup-schroot-trusty':  'setup_schroot',
+    'setup-schroot-precise': 'setup_schroot',
+    'update-all-schroots':   'update_schroot',
+    'centos5-i386':          'linux_schroot',
+    'centos5-amd64':         'linux_schroot',
+    'centos6-i386':          'linux_schroot',
+    'centos6-amd64':         'linux_schroot',
+    'wheezy-i386':           'linux_schroot',
+    'wheezy-amd64':          'linux_schroot',
+    'trusty-i386':           'linux_schroot',
+    'trusty-amd64':          'linux_schroot',
+    'precise-i386':          'linux_schroot',
+    'precise-amd64':         'linux_schroot',
+    'mingw-w64-cross-win32': 'mingw64_cross',
+    'mingw-w64-cross-win64': 'mingw64_cross',
+    'posix-local':           'posix_local',
+    'osx-cocoa-x86-64':      'osx',
+    'osx-carbon-i386':       'osx'
+}
+
 >>>>>>> upstream/master
 QT_CONFIG = {
     'common' : [
@@ -117,12 +156,12 @@ QT_CONFIG = {
         '-silent',                  # perform a silent build
         '-xrender',                 # xrender support is required
         '-largefile',
-        '-no-rpath',
+        '-iconv',                   # iconv support is required for text codecs
         '-openssl',                 # load OpenSSL binaries at runtime
+        '-no-rpath',
         '-no-dbus',
         '-no-nis',
         '-no-cups',
-        '-no-iconv',
         '-no-pch',
         '-no-gtkstyle',
         '-no-nas-sound',
@@ -158,19 +197,17 @@ QT_CONFIG = {
     ],
 
     'osx': [
+        '-silent',                  # perform a silent build
         '-no-framework',
         '-no-dwarf2',
         '-xrender',                 # xrender support is required
         '-openssl',                 # load OpenSSL binaries at runtime
         '-largefile',
-        '-no-rpath',
-        'remove:-system-libpng',
-        'remove:-system-libjpeg',
-        '-qt-libpng',
-        '-qt-libjpeg'
+        '-no-rpath'
     ]
 }
 
+<<<<<<< HEAD
 WEBKIT_CONFIG = {
     'common' : [
         '--qt',
@@ -248,6 +285,70 @@ BUILDERS = {
     'posix-local':           'posix_local',
     'osx-cocoa-x86-64':      'osx',
     'osx-carbon-i386':       'osx'
+=======
+FPM_SETUP = {
+    'common': {
+        '--name':        'wkhtmltox',
+        '--description': 'convert HTML to PDF and various image formats using QtWebkit',
+        '--version':     '$1',
+        '--license':     'LGPLv3',
+        '--vendor':      'wkhtmltopdf.org',
+        '--url':         'http://wkhtmltopdf.org',
+        '--maintainer':  'Ashish Kulkarni <kulkarni.ashish@gmail.com>',
+        '-s':            'dir',
+        '-C':            'dist',
+        '--prefix':      '/usr/local',
+        '--category':    'utils'
+    },
+    'wheezy': {
+        '-t':                'deb',
+        '--deb-compression': 'xz',
+        '--provides':        'wkhtmltopdf',
+        '--conflicts':       'wkhtmltopdf',
+        '--replaces':        'wkhtmltopdf',
+        '--depends':         ['fontconfig', 'libfontconfig1', 'libfreetype6', 'libpng12-0', 'zlib1g', 'libjpeg8',
+                              'libssl1.0.0', 'libx11-6', 'libxext6', 'libxrender1', 'libstdc++6', 'libc6']
+    },
+    'trusty': {
+        '-t':                'deb',
+        '--deb-compression': 'xz',
+        '--provides':        'wkhtmltopdf',
+        '--conflicts':       'wkhtmltopdf',
+        '--replaces':        'wkhtmltopdf',
+        '--depends':         ['fontconfig', 'libfontconfig1', 'libfreetype6', 'libpng12-0', 'zlib1g', 'libjpeg-turbo8',
+                              'libssl1.0.0', 'libx11-6', 'libxext6', 'libxrender1', 'libstdc++6', 'libc6']
+    },
+    'precise': {
+        '-t':                'deb',
+        '--deb-compression': 'xz',
+        '--provides':        'wkhtmltopdf',
+        '--conflicts':       'wkhtmltopdf',
+        '--replaces':        'wkhtmltopdf',
+        '--depends':         ['fontconfig', 'libfontconfig1', 'libfreetype6', 'libpng12-0', 'zlib1g', 'libjpeg8',
+                              'libssl1.0.0', 'libx11-6', 'libxext6', 'libxrender1', 'libstdc++6', 'libc6']
+    },
+    'centos5': {
+        '-t':                'rpm',
+        '--epoch':           '1',
+        '--rpm-compression': 'bzip2',
+        '--depends':         ['fontconfig', 'freetype', 'libpng', 'zlib', 'libjpeg', 'openssl',
+                              'libX11', 'libXext', 'libXrender', 'libstdc++', 'glibc']
+    },
+    'centos6': {
+        '-t':                'rpm',
+        '--epoch':           '1',
+        '--rpm-compression': 'bzip2',
+        '--depends':         ['fontconfig', 'freetype', 'libpng', 'zlib', 'libjpeg', 'openssl',
+                              'libX11', 'libXext', 'libXrender', 'libstdc++', 'glibc']
+    },
+    'osx': {
+        '-t':                         'osxpkg',
+        '-C':                         'pkg',
+        '--prefix':                   '/usr/local/share/wkhtmltox-installer',
+        '--osxpkg-identifier-prefix': 'org.wkhtmltopdf',
+        '--after-install':            'extract.sh'
+    }
+>>>>>>> upstream/master
 }
 
 CHROOT_SETUP  = {
@@ -263,6 +364,7 @@ deb http://security.debian.org/   wheezy/updates main contrib non-free"""),
         ('shell', 'apt-get install --assume-yes libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxrender-dev'),
         ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
         ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\n'),
+        ('fpm_setup',  'fpm_package.sh'),
         ('schroot_conf', 'Debian Wheezy')
     ],
 
@@ -278,6 +380,7 @@ deb http://archive.ubuntu.com/ubuntu/ trusty-security main restricted universe m
         ('shell', 'apt-get install --assume-yes libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxrender-dev'),
         ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
         ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\n'),
+        ('fpm_setup',  'fpm_package.sh'),
         ('schroot_conf', 'Ubuntu Trusty')
     ],
 
@@ -293,11 +396,13 @@ deb http://archive.ubuntu.com/ubuntu/ precise-security main restricted universe 
         ('shell', 'apt-get install --assume-yes libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxrender-dev'),
         ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
         ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\n'),
+        ('fpm_setup',  'fpm_package.sh'),
         ('schroot_conf', 'Ubuntu Precise')
     ],
 
     'centos5': [
         ('rinse', 'centos-5'),
+<<<<<<< HEAD
         ('write_file', 'etc/yum.repos.d/kbs-el5-rb187.repo', """
 [kbs-el5-rb187]
 name=kbs-el5-rb187
@@ -308,9 +413,18 @@ gpgkey=http://centos.karan.org/RPM-GPG-KEY-karan.org.txt"""),
         ('shell', 'yum update -y'),
         ('append_file:amd64', 'etc/yum.conf', 'exclude = *.i?86\n'),
         ('shell', 'yum install -y gcc gcc-c++ make diffutils perl xz ruby-devel rubygems rpm-build'),
+=======
+        ('download_file', 'http://centos.karan.org/el5/ruby187/kbs-el5-ruby187.repo', 'etc/yum.repos.d'),
+        ('download_file', 'http://dl.fedoraproject.org/pub/epel/5/i386/epel-release-5-4.noarch.rpm', 'tmp'),
+        ('shell', 'rpm -i /tmp/epel-release-5-4.noarch.rpm'),
+        ('shell', 'yum update -y'),
+        ('append_file:amd64', 'etc/yum.conf', 'exclude = *.i?86\n'),
+        ('shell', 'yum install -y gcc gcc-c++ make diffutils perl ruby-devel rubygems rpm-build libffi-devel'),
+>>>>>>> upstream/master
         ('shell', 'yum install -y openssl-devel libX11-devel libXrender-devel libXext-devel fontconfig-devel freetype-devel libjpeg-devel libpng-devel zlib-devel'),
         ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
         ('write_file', 'update.sh', 'yum update -y\n'),
+        ('fpm_setup',  'fpm_package.sh'),
         ('schroot_conf', 'CentOS 5')
     ],
 
@@ -318,10 +432,15 @@ gpgkey=http://centos.karan.org/RPM-GPG-KEY-karan.org.txt"""),
         ('rinse', 'centos-6'),
         ('shell', 'yum update -y'),
         ('append_file:amd64', 'etc/yum.conf', 'exclude = *.i?86\n'),
+<<<<<<< HEAD
         ('shell', 'yum install -y gcc gcc-c++ make diffutils perl tar xz ruby-devel rubygems rpm-build'),
+=======
+        ('shell', 'yum install -y gcc gcc-c++ make diffutils perl ruby-devel rubygems rpm-build libffi-devel'),
+>>>>>>> upstream/master
         ('shell', 'yum install -y openssl-devel libX11-devel libXrender-devel libXext-devel fontconfig-devel freetype-devel libjpeg-devel libpng-devel zlib-devel'),
         ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
         ('write_file', 'update.sh', 'yum update -y\n'),
+        ('fpm_setup',  'fpm_package.sh'),
         ('schroot_conf', 'CentOS 6')
     ]
 }
@@ -414,6 +533,18 @@ DEPENDENT_LIBS = {
                     ('scripts/makefile.gcc', 'AR_RC = ar', 'AR_RC = %(mingw-w64)s-ar'),
                     ('scripts/makefile.gcc', 'RANLIB = ranlib', 'RANLIB = %(mingw-w64)s-ranlib')],
                 'commands': ['make -f scripts/makefile.gcc libpng.a']
+            },
+            'osx-carbon-i386': {
+                'result': ['include/png.h', 'include/pngconf.h', 'include/pnglibconf.h', 'lib/libpng.a'],
+                'commands': [
+                    'CFLAGS="-arch i386" ./configure --disable-shared --prefix=%(destdir)s',
+                    'make install']
+            },
+            'osx-cocoa-x86-64': {
+                'result': ['include/png.h', 'include/pngconf.h', 'include/pnglibconf.h', 'lib/libpng.a'],
+                'commands': [
+                    'CFLAGS="-arch x86_64" ./configure --disable-shared --prefix=%(destdir)s',
+                    'make install']
             }
         }
     },
@@ -443,6 +574,32 @@ DEPENDENT_LIBS = {
                 'commands': [
                     './configure --host=%(mingw-w64)s --disable-shared --prefix=%(destdir)s',
                     'make install']
+            },
+            'osx-carbon-i386': {
+                'result': ['include/jpeglib.h', 'include/jmorecfg.h', 'include/jerror.h', 'include/jconfig.h', 'lib/libjpeg.a'],
+                'commands': [
+                    'CFLAGS="-arch i386" ./configure --disable-shared --prefix=%(destdir)s',
+                    'make install']
+            },
+            'osx-cocoa-x86-64': {
+                'result': ['include/jpeglib.h', 'include/jmorecfg.h', 'include/jerror.h', 'include/jconfig.h', 'lib/libjpeg.a'],
+                'commands': [
+                    'CFLAGS="-arch x86_64" ./configure --disable-shared --prefix=%(destdir)s',
+                    'make install']
+            }
+        }
+    },
+
+    'xz': {
+        'order' : 5,
+        'url' : 'http://tukaani.org/xz/xz-5.0.5.tar.gz',
+        'sha1': '26fec2c1e409f736e77a85e4ab314dc74987def0',
+        'build' : {
+            'osx*': {
+                'result': ['bin/xz'],
+                'commands': [
+                    'CFLAGS="-arch x86_64" ./configure --disable-nls --enable-small --disable-shared --disable-threads --prefix=%(destdir)s',
+                    'make -C src/liblzma', 'make -C src/xz', 'make install-strip']
             }
         }
     }
@@ -502,7 +659,7 @@ def error(msg):
 def shell(cmd):
     ret = os.system(cmd)
     if ret != 0:
-        error("command failed: exit code %d" % ret)
+        error("%s\ncommand failed: exit code %d" % (cmd, ret))
 
 def get_output(*cmd):
     try:
@@ -546,6 +703,18 @@ def qt_config(key, *opts):
         elif arg[1+arg.index(':'):] in output:
             output.remove(arg[1+arg.index(':'):])
     return ' '.join(output)
+
+def fpm_setup(cfg):
+    input, output = {}, ''
+    input.update(FPM_SETUP['common'])
+    input.update(FPM_SETUP[cfg])
+    for key in input:
+        if type(input[key]) is list:
+            for val in input[key]:
+                output += ' %s "%s"' % (key, val)
+        else:
+            output += ' %s "%s"' % (key, input[key])
+    return output, input
 
 def download_file(url, sha1, dir):
     name = url.split('/')[-1]
@@ -689,6 +858,21 @@ def build_setup_schroot(config, basedir):
                 open(os.path.join(root_dir, command[1]), 'w').write(command[2].strip())
             elif name == 'append_file':
                 open(os.path.join(root_dir, command[1]), 'a').write(command[2].strip())
+            elif name == 'download_file':
+                name = command[1].split('/')[-1]
+                loc  = os.path.join(root_dir, command[2], name)
+                if exists(loc): os.remove(loc)
+                def hook(cnt, bs, total):
+                    pct = int(cnt*bs*100/total)
+                    message("\rDownloading: %s [%d%%]" % (name, pct))
+                urllib.urlretrieve(command[1], loc, reporthook=hook)
+                message("\rDownloaded: %s%s\n" % (name, ' '*10))
+            elif name == 'fpm_setup':
+                args, cfg = fpm_setup(chroot)
+                cmd = '#!/bin/sh\nXZ_OPT=-9 fpm --force %s --package ../%s-$1_linux-%s-$2.%s .\n'
+                loc = os.path.join(root_dir, command[1])
+                open(loc, 'w').write(cmd % (args, cfg['--name'], chroot, cfg['-t']))
+                shell('chmod a+x %s' % loc)
             elif name == 'schroot_conf':
                 cfg = open('/etc/schroot/chroot.d/wkhtmltopdf-%s-%s' % (chroot, arch), 'w')
                 cfg.write('[wkhtmltopdf-%s-%s]\n' % (chroot, arch))
@@ -741,8 +925,10 @@ def build_source_tarball(config, basedir):
     shell('git clean -fdx')
     shell('git reset --hard HEAD')
     shell('git submodule update')
+    open('VERSION', 'w').write(version)
     with tarfile.open('wkhtmltox-%s.tar.bz2' % version, 'w:bz2') as tar:
         tar.add('.', 'wkhtmltox-%s/' % version, filter=_filter_tar)
+    shell('git reset --hard HEAD')
 
 # --------------------------------------------------------------- MSVC (2008-2013)
 
@@ -990,7 +1176,7 @@ def build_linux_schroot(config, basedir):
 
     dir    = os.path.join(basedir, config)
     script = os.path.join(dir, 'build.sh')
-    dist   = os.path.join(dir, 'wkhtmltox-%s' % version)
+    dist   = os.path.join(dir, 'dist')
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1086,8 +1272,7 @@ def build_linux_schroot(config, basedir):
     lines.append('make install INSTALL_ROOT=%s || exit 1' % dist)
 >>>>>>> upstream/master
     lines.append('cd ..')
-    lines.append('tar -c -v -f ../wkhtmltox-%s_linux-%s.tar wkhtmltox-%s/' % (version, config, version))
-    lines.append('xz --compress --force --verbose -9 ../wkhtmltox-%s_linux-%s.tar' % (version, config))
+    lines.append('/fpm_package.sh %s %s' % (version, config[1+config.index('-'):]))
     lines.append('# end of build script')
 
     open(script, 'w').write('\n'.join(lines))
@@ -1105,7 +1290,7 @@ def build_posix_local(config, basedir):
     version, simple_version = get_version(basedir)
 
     app    = os.path.join(basedir, config, 'app')
-    qtdir  = os.path.join(basedir, config, 'qt')
+    qt     = os.path.join(basedir, config, 'qt')
     dist   = os.path.join(basedir, config, 'wkhtmltox-%s' % version)
     make   = get_output('which gmake') and 'gmake' or 'make'
 
@@ -1119,7 +1304,7 @@ def build_posix_local(config, basedir):
 
     os.chdir(qt)
     if not exists('is_configured'):
-        shell('../../../qt/configure %s' % qt_config('posix', '--prefix=%s' % qtdir))
+        shell('../../../qt/configure %s' % qt_config('posix', '--prefix=%s' % qt))
         shell('touch is_configured')
 
     if subprocess.call([make, '-j%d' % CPU_COUNT]):
@@ -1148,8 +1333,12 @@ def check_osx(config):
     if not get_output('xcode-select', '--print-path'):
         error('Xcode is not installed, aborting.')
 
+    if not get_output('which', 'fpm'):
+        error('Please install fpm by running "sudo gem install fpm --no-ri --no-rdoc"')
+
 def build_osx(config, basedir):
     version, simple_version = get_version(basedir)
+    build_deplibs(config, basedir)
 
     osxver    = platform.mac_ver()[0][:platform.mac_ver()[0].rindex('.')]
     framework = config.split('-')[1]
@@ -1163,26 +1352,28 @@ def build_osx(config, basedir):
         for item in ['CFLAGS', 'CXXFLAGS']:
             flags += '"QMAKE_%s += %s" ' % (item, '-fvisibility=hidden -fvisibility-inlines-hidden')
 
-    qt     = os.path.join(basedir, config, 'qt')
-    app    = os.path.join(basedir, config, 'app')
-    dist   = os.path.join(basedir, config, 'wkhtmltox-%s' % version)
+    def get_dir(name):
+        return os.path.join(basedir, config, name)
 
-    mkdir_p(qt)
-    mkdir_p(app)
+    configure_args = qt_config('osx', osxcfg,
+        '--prefix=%s'   % get_dir('qt'),
+        '-I %s/include' % get_dir('deplibs'),
+        '-L %s/lib'     % get_dir('deplibs'))
 
-    rmdir(dist)
-    mkdir_p(os.path.join(dist, 'bin'))
-    mkdir_p(os.path.join(dist, 'include', 'wkhtmltox'))
-    mkdir_p(os.path.join(dist, 'lib'))
+    rmdir(get_dir('dist'))
+    rmdir(get_dir('pkg'))
+    mkdir_p(get_dir('qt'))
+    mkdir_p(get_dir('app'))
+    mkdir_p(get_dir('pkg'))
 
-    os.chdir(qt)
+    os.chdir(get_dir('qt'))
     if not exists('is_configured'):
-        shell('../../../qt/configure %s' % qt_config('osx', '--prefix=%s' % qt, osxcfg))
+        shell('../../../qt/configure %s' % configure_args)
         shell('touch is_configured')
 
     shell('make -j%d' % CPU_COUNT)
 
-    os.chdir(app)
+    os.chdir(get_dir('app'))
     shell('rm -f bin/*')
     os.environ['WKHTMLTOX_VERSION'] = version
     shell('../qt/bin/qmake %s ../../../wkhtmltopdf.pro' % flags)
@@ -1196,14 +1387,54 @@ def build_osx(config, basedir):
                 '/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework/CoreText',
                 'bin/'+item]))
 
-    shell('cp bin/wkhtmlto* ../wkhtmltox-%s/bin' % version)
-    shell('cp -P bin/libwkhtmltox*.dylib* ../wkhtmltox-%s/lib' % version)
-    shell('cp ../../../include/wkhtmltox/*.h ../wkhtmltox-%s/include/wkhtmltox' % version)
-    shell('cp ../../../include/wkhtmltox/dll*.inc ../wkhtmltox-%s/include/wkhtmltox' % version)
+    shell('make install INSTALL_ROOT=%s' % get_dir('dist'))
+
+    def _osx_tar(info):
+        info.uid   = info.gid   = 0
+        info.uname = 'root'
+        info.gname = 'wheel'
+        return info
+
+    # create tarball for application and copy xz
+    os.chdir(get_dir('dist'))
+    with tarfile.open('../pkg/app.tar', 'w') as tar:
+        tar.add('.', './', filter=_osx_tar)
+    xz = os.path.join(get_dir('deplibs'), 'bin', 'xz')
+    shell('%s --compress --force --verbose -9 ../pkg/app.tar' % xz)
+    shutil.copy(xz, '../pkg/')
+
+    args, cfg = fpm_setup('osx')
+    with open('../pkg/uninstall-wkhtmltox', 'w') as f:
+        os.chmod('../pkg/uninstall-wkhtmltox', 0o755)
+        f.write("""#!/bin/bash
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as sudo uninstall-wkhtmltox" 1>&2
+   exit 1
+fi
+cd /usr/local
+if which pkgutil >/dev/null; then
+    pkgutil --forget %s.%s
+fi
+""" % (cfg['--osxpkg-identifier-prefix'], cfg['--name']))
+        for root, dirs, files in os.walk(get_dir('dist')):
+            for file in files:
+                f.write('echo REMOVE /usr/local/%(name)s && rm -f %(name)s\n' % { 'name': os.path.relpath(os.path.join(root, file)) })
+        f.write('echo REMOVE /usr/local/include/wkhtmltox && rm -df /usr/local/include/wkhtmltox\n')
+        f.write('echo REMOVE /usr/local/bin/uninstall-wkhtmltox && rm -f /usr/local/bin/uninstall-wkhtmltox')
+
+    open('../extract.sh', 'w').write("""#!/bin/bash
+TGTDIR=/usr/local
+BASEDIR=%s
+cd $BASEDIR
+./xz --decompress app.tar.xz
+cd $TGTDIR
+tar xf $BASEDIR/app.tar
+mv $BASEDIR/uninstall-wkhtmltox $TGTDIR/bin
+rm -fr $BASEDIR
+""" % cfg['--prefix'])
 
     os.chdir(os.path.join(basedir, config))
-    shell('tar -c -v -f ../wkhtmltox-%s_%s.tar wkhtmltox-%s/' % (version, config, version))
-    shell('xz --compress --force --verbose -9 ../wkhtmltox-%s_%s.tar' % (version, config))
+    shell('fpm --force %s --package ../%s-%s_%s.pkg .' % (args.replace('$1', version), cfg['--name'], version, config))
 
 # --------------------------------------------------------------- command line
 
