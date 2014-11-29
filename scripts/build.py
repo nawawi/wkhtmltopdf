@@ -73,6 +73,7 @@ BUILDERS = {
     'setup-mingw-w64':       'setup_mingw64',
     'setup-schroot-centos5': 'setup_schroot',
     'setup-schroot-centos6': 'setup_schroot',
+    'setup-schroot-centos7': 'setup_schroot',
     'setup-schroot-wheezy':  'setup_schroot',
     'setup-schroot-trusty':  'setup_schroot',
     'setup-schroot-precise': 'setup_schroot',
@@ -81,6 +82,7 @@ BUILDERS = {
     'centos5-amd64':         'linux_schroot',
     'centos6-i386':          'linux_schroot',
     'centos6-amd64':         'linux_schroot',
+    'centos7-amd64':         'linux_schroot',
     'wheezy-i386':           'linux_schroot',
     'wheezy-amd64':          'linux_schroot',
     'trusty-i386':           'linux_schroot',
@@ -306,8 +308,8 @@ FPM_SETUP = {
         '--provides':        'wkhtmltopdf',
         '--conflicts':       'wkhtmltopdf',
         '--replaces':        'wkhtmltopdf',
-        '--depends':         ['fontconfig', 'libfontconfig1', 'libfreetype6', 'libpng12-0', 'zlib1g', 'libjpeg8',
-                              'libssl1.0.0', 'libx11-6', 'libxext6', 'libxrender1', 'libstdc++6', 'libc6']
+        '--depends':         ['fontconfig', 'libfontconfig1', 'libfreetype6', 'libpng12-0', 'zlib1g', 'libjpeg8', 'libssl1.0.0',
+                              'libx11-6', 'libxext6', 'libxrender1', 'xfonts-base', 'xfonts-75dpi', 'libstdc++6', 'libc6']
     },
     'trusty': {
         '-t':                'deb',
@@ -315,8 +317,8 @@ FPM_SETUP = {
         '--provides':        'wkhtmltopdf',
         '--conflicts':       'wkhtmltopdf',
         '--replaces':        'wkhtmltopdf',
-        '--depends':         ['fontconfig', 'libfontconfig1', 'libfreetype6', 'libpng12-0', 'zlib1g', 'libjpeg-turbo8',
-                              'libssl1.0.0', 'libx11-6', 'libxext6', 'libxrender1', 'libstdc++6', 'libc6']
+        '--depends':         ['fontconfig', 'libfontconfig1', 'libfreetype6', 'libpng12-0', 'zlib1g', 'libjpeg-turbo8', 'libssl1.0.0',
+                              'libx11-6', 'libxext6', 'libxrender1', 'xfonts-base', 'xfonts-75dpi', 'libstdc++6', 'libc6']
     },
     'precise': {
         '-t':                'deb',
@@ -324,22 +326,29 @@ FPM_SETUP = {
         '--provides':        'wkhtmltopdf',
         '--conflicts':       'wkhtmltopdf',
         '--replaces':        'wkhtmltopdf',
-        '--depends':         ['fontconfig', 'libfontconfig1', 'libfreetype6', 'libpng12-0', 'zlib1g', 'libjpeg8',
-                              'libssl1.0.0', 'libx11-6', 'libxext6', 'libxrender1', 'libstdc++6', 'libc6']
+        '--depends':         ['fontconfig', 'libfontconfig1', 'libfreetype6', 'libpng12-0', 'zlib1g', 'libjpeg8', 'libssl1.0.0',
+                              'libx11-6', 'libxext6', 'libxrender1', 'xfonts-base', 'xfonts-75dpi', 'libstdc++6', 'libc6']
     },
     'centos5': {
         '-t':                'rpm',
         '--epoch':           '1',
         '--rpm-compression': 'bzip2',
-        '--depends':         ['fontconfig', 'freetype', 'libpng', 'zlib', 'libjpeg', 'openssl',
-                              'libX11', 'libXext', 'libXrender', 'libstdc++', 'glibc']
+        '--depends':         ['fontconfig', 'freetype', 'libpng', 'zlib', 'libjpeg', 'openssl', 'libstdc++', 'glibc',
+                              'libX11', 'libXext', 'libXrender', 'xorg-x11-fonts-Type1', 'xorg-x11-fonts-75dpi']
     },
     'centos6': {
         '-t':                'rpm',
         '--epoch':           '1',
         '--rpm-compression': 'bzip2',
-        '--depends':         ['fontconfig', 'freetype', 'libpng', 'zlib', 'libjpeg', 'openssl',
-                              'libX11', 'libXext', 'libXrender', 'libstdc++', 'glibc']
+        '--depends':         ['fontconfig', 'freetype', 'libpng', 'zlib', 'libjpeg', 'openssl', 'libstdc++', 'glibc',
+                              'libX11', 'libXext', 'libXrender', 'xorg-x11-fonts-Type1', 'xorg-x11-fonts-75dpi']
+    },
+    'centos7': {
+        '-t':                'rpm',
+        '--epoch':           '1',
+        '--rpm-compression': 'xz',
+        '--depends':         ['fontconfig', 'freetype', 'libpng', 'zlib', 'libjpeg-turbo', 'openssl', 'libstdc++', 'glibc',
+                              'libX11', 'libXext', 'libXrender', 'xorg-x11-fonts-Type1', 'xorg-x11-fonts-75dpi']
     },
     'osx': {
         '-t':                         'osxpkg',
@@ -362,8 +371,8 @@ deb http://security.debian.org/   wheezy/updates main contrib non-free"""),
         ('shell', 'apt-get dist-upgrade --assume-yes'),
         ('shell', 'apt-get install --assume-yes xz-utils libssl-dev libpng-dev libjpeg8-dev zlib1g-dev rubygems'),
         ('shell', 'apt-get install --assume-yes libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxrender-dev'),
-        ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
-        ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\n'),
+        ('shell', 'gem install fpm --no-ri --no-rdoc'),
+        ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\ngem update fpm\n'),
         ('fpm_setup',  'fpm_package.sh'),
         ('schroot_conf', 'Debian Wheezy')
     ],
@@ -378,8 +387,8 @@ deb http://archive.ubuntu.com/ubuntu/ trusty-security main restricted universe m
         ('shell', 'apt-get dist-upgrade --assume-yes'),
         ('shell', 'apt-get install --assume-yes xz-utils libssl-dev libpng-dev libjpeg-turbo8-dev zlib1g-dev ruby-dev'),
         ('shell', 'apt-get install --assume-yes libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxrender-dev'),
-        ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
-        ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\n'),
+        ('shell', 'gem install fpm --no-ri --no-rdoc'),
+        ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\ngem update fpm\n'),
         ('fpm_setup',  'fpm_package.sh'),
         ('schroot_conf', 'Ubuntu Trusty')
     ],
@@ -394,8 +403,8 @@ deb http://archive.ubuntu.com/ubuntu/ precise-security main restricted universe 
         ('shell', 'apt-get dist-upgrade --assume-yes'),
         ('shell', 'apt-get install --assume-yes xz-utils libssl-dev libpng-dev libjpeg8-dev zlib1g-dev rubygems'),
         ('shell', 'apt-get install --assume-yes libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxrender-dev'),
-        ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
-        ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\n'),
+        ('shell', 'gem install fpm --no-ri --no-rdoc'),
+        ('write_file', 'update.sh', 'apt-get update\napt-get dist-upgrade --assume-yes\ngem update fpm\n'),
         ('fpm_setup',  'fpm_package.sh'),
         ('schroot_conf', 'Ubuntu Precise')
     ],
@@ -422,8 +431,8 @@ gpgkey=http://centos.karan.org/RPM-GPG-KEY-karan.org.txt"""),
         ('shell', 'yum install -y gcc gcc-c++ make diffutils perl ruby-devel rubygems rpm-build libffi-devel'),
 >>>>>>> upstream/master
         ('shell', 'yum install -y openssl-devel libX11-devel libXrender-devel libXext-devel fontconfig-devel freetype-devel libjpeg-devel libpng-devel zlib-devel'),
-        ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
-        ('write_file', 'update.sh', 'yum update -y\n'),
+        ('shell', 'gem install fpm --no-ri --no-rdoc'),
+        ('write_file', 'update.sh', 'yum update -y\ngem update fpm\n'),
         ('fpm_setup',  'fpm_package.sh'),
         ('schroot_conf', 'CentOS 5')
     ],
@@ -438,10 +447,23 @@ gpgkey=http://centos.karan.org/RPM-GPG-KEY-karan.org.txt"""),
         ('shell', 'yum install -y gcc gcc-c++ make diffutils perl ruby-devel rubygems rpm-build libffi-devel'),
 >>>>>>> upstream/master
         ('shell', 'yum install -y openssl-devel libX11-devel libXrender-devel libXext-devel fontconfig-devel freetype-devel libjpeg-devel libpng-devel zlib-devel'),
-        ('shell', 'gem install fpm ronn --no-ri --no-rdoc'),
-        ('write_file', 'update.sh', 'yum update -y\n'),
+        ('shell', 'gem install fpm --no-ri --no-rdoc'),
+        ('write_file', 'update.sh', 'yum update -y\ngem update fpm\n'),
         ('fpm_setup',  'fpm_package.sh'),
         ('schroot_conf', 'CentOS 6')
+    ],
+
+    'centos7:amd64': [
+        ('rinse', 'centos-7'),
+        ('shell', 'yum update -y'),
+        ('append_file', 'etc/yum.conf', 'exclude = *.i?86\n'),
+        ('shell', 'yum install -y gcc gcc-c++ make diffutils perl ruby-devel rubygems rpm-build libffi-devel'),
+        ('shell', 'yum install -y openssl-devel libX11-devel libXrender-devel libXext-devel fontconfig-devel freetype-devel libjpeg-turbo-devel libpng-devel zlib-devel'),
+        ('shell', 'yum reinstall -y binutils'), # binutils isn't properly installed (no /usr/bin/ld) hence reinstall it
+        ('shell', 'gem install fpm --no-ri --no-rdoc'),
+        ('write_file', 'update.sh', 'yum update -y\ngem update fpm\n'),
+        ('fpm_setup',  'fpm_package.sh'),
+        ('schroot_conf', 'CentOS 7')
     ]
 }
 
@@ -829,13 +851,20 @@ def build_setup_schroot(config, basedir):
 
     login  = os.environ.get('SUDO_USER') or get_output('logname')
     chroot = config[1+config.rindex('-'):]
+
+    command_list = CHROOT_SETUP.get(chroot)
+    if not command_list and ('%s:amd64' % chroot) in CHROOT_SETUP:
+        command_list = CHROOT_SETUP['%s:amd64' % chroot]
+        if 'i386' in ARCH:
+            del ARCH[ARCH.index('i386')]
+
     for arch in ARCH:
         message('******************* %s-%s\n' % (chroot, arch))
         base_dir = os.environ.get('WKHTMLTOX_CHROOT') or '/var/chroot'
         root_dir = os.path.join(base_dir, 'wkhtmltopdf-%s-%s' % (chroot, arch))
         rmdir(root_dir)
         mkdir_p(root_dir)
-        for command in CHROOT_SETUP[chroot]:
+        for command in command_list:
             # handle architecture-specific commands
             name = command[0]
             if ':' in name:
@@ -1161,9 +1190,17 @@ def build_mingw64_cross(config, basedir):
     shell('%s/bin/qmake -spec win32-g++-4.6 %s/../wkhtmltopdf.pro' % (qtdir, basedir))
     shell('make')
     shutil.copy('bin/libwkhtmltox0.a', 'bin/wkhtmltox.lib')
+    shell('rm -f bin/lib*.dll')
+    for dll in ['libgcc_s_sjlj-1.dll', 'libgcc_s_seh-1.dll', 'libstdc++-6.dll']:
+        dll_path = get_output('dpkg', '-S', dll)
+        if dll_path:
+            for line in dll_path.split('\n'):
+                loc = line[1+line.index(':'):].strip()
+                if exists(loc) and MINGW_W64_PREFIX[rchop(config, '-dbg')] in loc and '-posix' not in loc:
+                    shell('cp %s bin/' % loc)
 
     os.chdir(os.path.join(basedir, '..'))
-    shell('makensis -DVERSION=%s -DSIMPLE_VERSION=%s -DTARGET=%s wkhtmltox.nsi' % \
+    shell('makensis -DVERSION=%s -DSIMPLE_VERSION=%s -DTARGET=%s -DMINGW wkhtmltox.nsi' % \
             (version, simple_version, config))
 
 # -------------------------------------------------- Linux schroot environment

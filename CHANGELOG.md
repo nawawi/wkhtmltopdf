@@ -2,15 +2,24 @@ v0.12.2 (unreleased)
 --------------------
 * use OpenSSL 1.0.1j for the Windows builds
 * fix build failure with unpatched Qt >= 5.3
-* **#1539**: using OpenType fonts now results in selectable text on Windows
-* **#1638**: fix incorrect rendering of JPEG images on Windows Server 2008 x64
+* **#1539**: **[qt]** using OpenType fonts now results in selectable text on Windows
+* **#1638**: **[qt]** fix incorrect rendering of JPEG images on Windows Server 2008 x64
+* **#1640**: **[qt]** make table page-break logic opt-in via CSS at the row level
 * **#1676**: do not allow overriding the header/footer settings for cover pages
 * **#1676**: set page margins correctly via computed header/footer heights for multiple URLs
 * **#1758**: fix corrupt image when output is specified as "-" in wkhtmltoimage on Windows
-* **#1722**: fix broken hyphenation with soft-hyphens (&shy;)
+* **#1722**: **[qt]** fix broken hyphenation with soft-hyphens
+* **#1769**: fixed unicode URLs in links
 * **#1772**: added variable 'isodate' for substitution in headers/footers
 * **#1808**: fix [sitepage] and [sitepages] not working without HTML headers/footers
+* **#1825**: fix handling of non-ASCII characters in command-line arguments
+* **#1906**: fix wrong comparison when parsing list parameters
+* **#1949**: fix generation of tarball in the posix-local build
 * **#1955**: installer does not work on 32-bit OS X (10.6.x or 10.7.x)
+* **#1961**: add explicit dependency on minimal font packages for all linux targets
+* **#1988**: fix footer spacing being ignored (and header spacing being used instead)
+* **#1992**: add support for CentOS 7 target
+* **#2055**: **[qt]** rendering of Thai symbols is very slow
 
 v0.12.1 (2014-06-26)
 --------------------
