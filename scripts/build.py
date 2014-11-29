@@ -448,8 +448,8 @@ gpgkey=http://centos.karan.org/RPM-GPG-KEY-karan.org.txt"""),
 DEPENDENT_LIBS = {
     'openssl': {
         'order' : 1,
-        'url'   : 'http://www.openssl.org/source/openssl-1.0.1i.tar.gz',
-        'sha1'  : '74eed314fa2c93006df8d26cd9fc630a101abd76',
+        'url'   : 'https://www.openssl.org/source/openssl-1.0.1j.tar.gz',
+        'sha1'  : 'cff86857507624f0ad42d922bb6f77c4f1c2b819',
         'build' : {
             'msvc*-win32*': {
                 'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
@@ -687,7 +687,7 @@ def get_version(basedir):
     hash = get_output('git', 'rev-parse', '--short', 'HEAD')
     if not hash:
         return (text, version)
-    return ('%s-%s' % (version, hash), version)
+    return ('%s-%s' % (text, hash), version)
 
 def qt_config(key, *opts):
     input, output = [], []
@@ -1320,7 +1320,7 @@ def build_posix_local(config, basedir):
     shell('cp ../../../include/wkhtmltox/*.h ../wkhtmltox-%s/include/wkhtmltox' % version)
     shell('cp ../../../include/wkhtmltox/dll*.inc ../wkhtmltox-%s/include/wkhtmltox' % version)
 
-    os.chdir(basedir)
+    os.chdir(os.path.join(basedir, config))
     shell('tar -c -v -f ../wkhtmltox-%s_local-%s.tar wkhtmltox-%s/' % (version, platform.node(), version))
     shell('xz --compress --force --verbose -9 ../wkhtmltox-%s_local-%s.tar' % (version, platform.node()))
 

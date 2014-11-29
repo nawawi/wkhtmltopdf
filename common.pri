@@ -43,19 +43,17 @@ win32:      CONFIG += console
 win32-g++*: QMAKE_LFLAGS += -static -static-libgcc -static-libstdc++
 
 QT += webkit network xmlpatterns svg
-greaterThan(QT_MAJOR_VERSION, 4): QT += webkitwidgets
+greaterThan(QT_MAJOR_VERSION, 4) {
+    QT += webkitwidgets
+    greaterThan(QT_MINOR_VERSION, 2): QT += printsupport
+}
 
 # version related information
 VERSION_TEXT=$$(WKHTMLTOX_VERSION)
 isEmpty(VERSION_TEXT): VERSION_TEXT=$$cat($$PWD/VERSION)
 VERSION_LIST=$$split(VERSION_TEXT, "-")
-count(VERSION_LIST, 1) {
-    VERSION=$$VERSION_TEXT
-    FULL_VERSION=$$VERSION
-} else {
-    VERSION=$$member(VERSION_LIST, 0)
-    BUILD=$$member(VERSION_LIST, 1)
-    FULL_VERSION=$$VERSION-$$BUILD
-}
 
-DEFINES += VERSION=$$VERSION FULL_VERSION=$$FULL_VERSION
+count(VERSION_LIST, 1): VERSION=$$VERSION_TEXT
+else:                   VERSION=$$member(VERSION_LIST, 0)
+
+DEFINES += VERSION=$$VERSION FULL_VERSION=$$VERSION_TEXT
