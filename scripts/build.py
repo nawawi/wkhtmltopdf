@@ -467,6 +467,7 @@ DEPENDENT_LIBS = {
         'build' : {
             'msvc*-win32*': {
                 'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
+                'replace': [('util/pl/VC-32.pl', ' /MT', ' /MD')],
                 'commands': [
                     'perl Configure --openssldir=%(destdir)s VC-WIN32 no-asm',
                     'ms\\do_ms.bat',
@@ -474,6 +475,7 @@ DEPENDENT_LIBS = {
             },
             'msvc*-win64*': {
                 'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
+                'replace': [('util/pl/VC-32.pl', ' /MT', ' /MD')],
                 'commands': [
                     'perl Configure --openssldir=%(destdir)s VC-WIN64A',
                     'ms\\do_win64a.bat',
@@ -500,7 +502,6 @@ DEPENDENT_LIBS = {
                     'include/zconf.h': 'zconf.h',
                     'lib/zdll.lib'   : 'zlib.lib'
                 },
-                'replace':  [('win32/Makefile.msc', '-MD', '-MT')],
                 'commands': ['nmake /f win32/Makefile.msc zlib.lib']
             },
             'mingw-w64-cross-win*': {
@@ -528,7 +529,6 @@ DEPENDENT_LIBS = {
                     'lib/libpng.lib'      : 'libpng.lib'
                 },
                 'replace': [
-                    ('scripts/makefile.vcwin32', '-MD', '-MT'),
                     ('scripts/makefile.vcwin32', '-I..\\zlib', '-I..\\deplibs\\include'),
                     ('scripts/makefile.vcwin32', '..\\zlib\\zlib.lib', '..\\deplibs\\lib\\zdll.lib')],
                 'commands': ['nmake /f scripts/makefile.vcwin32 libpng.lib']
@@ -578,7 +578,7 @@ DEPENDENT_LIBS = {
                 },
                 'replace':  [('makefile.vc', '!include <win32.mak>', ''),
                              ('makefile.vc', '$(cc)', 'cl'),
-                             ('makefile.vc', '$(cflags) $(cdebug) $(cvars)', '-c -nologo -D_CRT_SECURE_NO_DEPRECATE -MT -O2 -W3')],
+                             ('makefile.vc', '$(cflags) $(cdebug) $(cvars)', '-c -nologo -D_CRT_SECURE_NO_DEPRECATE -MD -O2 -W3')],
                 'commands': [
                     'copy /y jconfig.vc jconfig.h',
                     'nmake /f makefile.vc libjpeg.lib']
@@ -655,6 +655,12 @@ import os, sys, platform, subprocess, shutil, re, fnmatch, multiprocessing, urll
 
 from os.path import exists
 
+if platform.system() == 'Windows':
+    try:
+        import winreg
+    except ImportError:
+        import _winreg as winreg
+
 CPU_COUNT = max(2, multiprocessing.cpu_count()-1)   # leave one CPU free
 
 def rchop(s, e):
@@ -690,6 +696,15 @@ def rmdir(path):
 def mkdir_p(path):
     if not exists(path):
         os.makedirs(path)
+
+def get_registry_value(key, value=None):
+    for mask in [0, winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY]:
+        try:
+            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key, 0, winreg.KEY_READ | mask)
+            return winreg.QueryValueEx(key, value)[0]
+        except WindowsError:
+            pass
+    return None
 
 def get_version(basedir):
     mkdir_p(basedir)
@@ -956,6 +971,10 @@ def build_source_tarball(config, basedir):
 MSVC_LOCATION = {
     'msvc2013': 'VS120COMNTOOLS'
 }
+MSVC_RUNTIME = {
+    'msvc2013-win32': ('18f81495bc5e6b293c69c28b0ac088a96debbab2', 'http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe'),
+    'msvc2013-win64': ('bef7e7cc1dcc45c0c11682d59c64843727557179', 'http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe')
+}
 
 def check_msvc(config):
     version, arch = rchop(config, '-dbg').split('-')
@@ -974,7 +993,18 @@ def check_msvc(config):
                        and not exists(os.path.join(vcdir, 'bin', 'x86_amd64', 'cl.exe')):
         error("%s: unable to find the amd64 compiler" % version)
 
+    perl = get_output('perl', '-V')
+    if not perl or 'perl5' not in perl:
+        error("perl does not seem to be installed.")
+
+    nsis = get_registry_value(r'SOFTWARE\NSIS')
+    if not nsis or not exists(os.path.join(nsis, 'makensis.exe')):
+        error("NSIS does not seem to be installed.")
+
 def build_msvc(config, basedir):
+    sha1, url = MSVC_RUNTIME[rchop(config, '-dbg')]
+    shutil.copy(download_file(url, sha1, basedir), os.path.join(basedir, config, 'vcredist.exe'))
+
     msvc, arch = rchop(config, '-dbg').split('-')
     vcdir = os.path.join(os.environ[MSVC_LOCATION[msvc]], '..', '..', 'VC')
     vcarg = 'x86'
@@ -1049,19 +1079,10 @@ def build_msvc(config, basedir):
     shell('%s\\bin\\qmake %s\\..\\wkhtmltopdf.pro' % (qtdir, basedir))
     shell('nmake')
 
-    found = False
-    for pfile in ['ProgramFiles(x86)', 'ProgramFiles']:
-        if not pfile in os.environ or not exists(os.path.join(os.environ[pfile], 'NSIS', 'makensis.exe')):
-            continue
-        found = True
-
-        makensis = os.path.join(os.environ[pfile], 'NSIS', 'makensis.exe')
-        os.chdir(os.path.join(basedir, '..'))
-        shell('"%s" /DVERSION=%s /DSIMPLE_VERSION=%s /DTARGET=%s wkhtmltox.nsi' % \
-                (makensis, version, simple_version, config))
-
-    if not found:
-        message("\n\nCould not build installer as NSIS was not found.\n")
+    makensis = os.path.join(get_registry_value(r'SOFTWARE\NSIS'), 'makensis.exe')
+    os.chdir(os.path.join(basedir, '..'))
+    shell('"%s" /DVERSION=%s /DSIMPLE_VERSION=%s /DTARGET=%s /DMSVC /DARCH=%s wkhtmltox.nsi' % \
+            (makensis, version, simple_version, config, arch))
 
 # ------------------------------------------------ MinGW-W64 Cross Environment
 
@@ -1152,8 +1173,8 @@ def build_mingw64_cross(config, basedir):
                     shell('cp %s bin/' % loc)
 
     os.chdir(os.path.join(basedir, '..'))
-    shell('makensis -DVERSION=%s -DSIMPLE_VERSION=%s -DTARGET=%s -DMINGW wkhtmltox.nsi' % \
-            (version, simple_version, config))
+    shell('makensis -DVERSION=%s -DSIMPLE_VERSION=%s -DTARGET=%s -DMINGW -DARCH=%s wkhtmltox.nsi' % \
+            (version, simple_version, config, rchop(config, '-dbg').split('-')[-1]))
 
 # -------------------------------------------------- Linux schroot environment
 
