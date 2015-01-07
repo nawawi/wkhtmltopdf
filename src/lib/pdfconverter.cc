@@ -76,7 +76,7 @@ bool DLL_LOCAL looksLikeHtmlAndNotAUrl(QString str) {
 }
 
 PdfConverterPrivate::PdfConverterPrivate(PdfGlobal & s, PdfConverter & o) :
-	settings(s), pageLoader(s.load),
+	settings(s), pageLoader(s.load, true),
 	out(o), printer(0), painter(0)
 #ifdef __EXTENSIVE_WKHTMLTOPDF_QT_HACK__
     , webPrinter(0), measuringHFLoader(s.load), hfLoader(s.load), tocLoader1(s.load), tocLoader2(s.load)
@@ -487,7 +487,7 @@ void PdfConverterPrivate::loadTocs() {
 
 		QString style = ps.tocXsl;
 		if (style.isEmpty()) {
-			style = obj.tocStyleFile.create(".xsl");
+			style = obj.tocFile.create(".xsl");
 			StreamDumper styleDump(style);
 			dumpDefaultTOCStyleSheet(styleDump.stream, ps.toc);
 		}
@@ -1006,23 +1006,6 @@ void PdfConverterPrivate::printDocument() {
 	if (!settings.dumpOutline.isEmpty()) {
 		StreamDumper sd(settings.dumpOutline);
 		outline->dump(sd.stream);
-	}
-
-	if (!settings.dumpRenderTree.isEmpty()) {
-#if QT_VERSION < 0x050000
-		StreamDumper sd(settings.dumpRenderTree);
-		for (int d=0; d < objects.size(); ++d) {
-			if (!objects[d].loaderObject || objects[d].loaderObject->skip || objects[d].settings.isTableOfContent)
-				continue;
-
-			sd.stream << "===========================================================" << endl
-				<< objects[d].settings.page.toUtf8().constData() << endl
-				<< "===========================================================" << endl
-				<< objects[d].page->mainFrame()->renderTreeDump().toUtf8().constData() << endl << endl;
-		}
-#else
-		emit out.warning("dumpRenderTree is not supported on Qt5.");
-#endif
 	}
 
  	painter->end();

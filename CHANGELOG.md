@@ -1,8 +1,7 @@
 v0.12.2 (unreleased)
 --------------------
-* use OpenSSL 1.0.1j for the Windows builds
+* external libraries updated: OpenSSL to 1.0.1j, libpng to 1.5.21 and xz to 5.2.0
 * fix build failure with unpatched Qt >= 5.3
-* add option --dump-render-tree for viewing the WebKit render tree
 * **#1539**: **[qt]** using OpenType fonts now results in selectable text on Windows
 * **#1638**: **[qt]** fix incorrect rendering of JPEG images on Windows Server 2008 x64
 * **#1639**: block access to local files on Windows when an invalid URL is used
@@ -13,10 +12,13 @@ v0.12.2 (unreleased)
 * **#1722**: **[qt]** fix broken hyphenation with soft-hyphens
 * **#1769**: fixed unicode URLs in links
 * **#1772**: added variable 'isodate' for substitution in headers/footers
+* **#1790**: fix handling of temporary files during PDF conversion via API
 * **#1808**: fix [sitepage] and [sitepages] not working without HTML headers/footers
 * **#1825**: fix handling of non-ASCII characters in command-line arguments
 * **#1863**: **[qt]** blank page or crash with low DPI on Windows
+* **#1892**: --window-status causes endless loop with --header-html
 * **#1906**: fix wrong comparison when parsing list parameters
+* **#1944**: **[breaking change]** fix the reflection subsystem to fix the non-functional API
 * **#1949**: fix generation of tarball in the posix-local build
 * **#1955**: installer does not work on 32-bit OS X (10.6.x or 10.7.x)
 * **#1961**: add explicit dependency on minimal font packages for all linux targets
