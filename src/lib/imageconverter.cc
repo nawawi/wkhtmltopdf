@@ -45,7 +45,7 @@ namespace wkhtmltopdf {
 
 ImageConverterPrivate::ImageConverterPrivate(ImageConverter & o, wkhtmltopdf::settings::ImageGlobal & s, const QString * data):
 	settings(s),
-	loader(s.loadGlobal),
+	loader(s.loadGlobal, true),
 	out(o) {
 	out.emitCheckboxSvgs(s.loadPage);
 	if (data) inputData = *data;
@@ -195,7 +195,7 @@ void ImageConverterPrivate::pagesLoaded(bool ok) {
 		e.setStyleProperty("background-color", "transparent");
 		e.setStyleProperty("background-image", "none");
 		QPalette pal = loaderObject->page.palette();
-		pal.setColor(QPalette::Base, QColor(Qt::transparent));
+		pal.setBrush(QPalette::Base, Qt::transparent);
 		loaderObject->page.setPalette(pal);
 	} else {
 		painter.fillRect(QRect(QPoint(0,0),loaderObject->page.viewportSize()), Qt::white);
