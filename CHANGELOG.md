@@ -1,3 +1,9 @@
+v0.12.3 (unreleased)
+----------------------
+* removed support for CentOS 5 builds
+* update OpenSSL to 1.0.1m
+* **#2104**: renamed COPYING to LICENSE
+
 v0.12.2.1 (2015-01-19)
 ----------------------
 * update OpenSSL to 1.0.1l
