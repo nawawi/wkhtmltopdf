@@ -129,7 +129,7 @@ QT_CONFIG = {
         '-no-xkb',
         '-no-glib',
         '-no-gstreamer',
-        '-D ENABLE_VIDEO=0',        # required as otherwise gstreamer gets linked in
+        '-no-icu',
         '-no-openvg',
         '-no-xsync',
         '-no-audio-backend',
@@ -345,12 +345,12 @@ deb http://archive.ubuntu.com/ubuntu/ trusty-security main restricted universe m
 DEPENDENT_LIBS = {
     'openssl': {
         'order' : 1,
-        'url'   : 'https://www.openssl.org/source/openssl-1.0.1m.tar.gz',
-        'sha1'  : '4ccaf6e505529652f9fdafa01d1d8300bd9f3179',
+        'url'   : 'https://openssl.org/source/openssl-1.0.2a.tar.gz',
+        'sha1'  : '46ecd325b8e587fa491f6bb02ad4a9fb9f382f5f',
         'build' : {
             'msvc*-win32*': {
                 'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
-                'replace': [('util/pl/VC-32.pl', ' /MT', ' /MD')],
+                'replace': [('util/pl/VC-32.pl', ' /MT', ' %(cflags)s')],
                 'commands': [
                     'perl Configure --openssldir=%(destdir)s VC-WIN32 no-asm',
                     'ms\\do_ms.bat',
@@ -358,7 +358,7 @@ DEPENDENT_LIBS = {
             },
             'msvc*-win64*': {
                 'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
-                'replace': [('util/pl/VC-32.pl', ' /MT', ' /MD')],
+                'replace': [('util/pl/VC-32.pl', ' /MT', ' %(cflags)s')],
                 'commands': [
                     'perl Configure --openssldir=%(destdir)s VC-WIN64A',
                     'ms\\do_win64a.bat',
@@ -385,6 +385,7 @@ DEPENDENT_LIBS = {
                     'include/zconf.h': 'zconf.h',
                     'lib/zdll.lib'   : 'zlib.lib'
                 },
+                'replace':  [('win32/Makefile.msc', '-MD', '%(cflags)s')],
                 'commands': ['nmake /f win32/Makefile.msc zlib.lib']
             },
             'mingw-w64-cross-win*': {
@@ -401,26 +402,25 @@ DEPENDENT_LIBS = {
 
     'libpng': {
         'order' : 3,
-        'url' : 'http://downloads.sourceforge.net/libpng/libpng-1.5.21.tar.gz',
-        'sha1': '0ce1aa25abd55ad153516a29735b8ad432b4b771',
+        'url' : 'http://downloads.sourceforge.net/libpng/libpng-1.2.53.tar.gz',
+        'sha1': '22f3cc22d26727af05d7c9a970a7d050b6761bd7',
         'build' : {
             'msvc*': {
                 'result': {
                     'include/png.h'       : 'png.h',
                     'include/pngconf.h'   : 'pngconf.h',
-                    'include/pnglibconf.h': 'pnglibconf.h',
                     'lib/libpng.lib'      : 'libpng.lib'
                 },
                 'replace': [
                     ('scripts/makefile.vcwin32', '-I..\\zlib', '-I..\\deplibs\\include'),
-                    ('scripts/makefile.vcwin32', '..\\zlib\\zlib.lib', '..\\deplibs\\lib\\zdll.lib')],
+                    ('scripts/makefile.vcwin32', '..\\zlib\\zlib.lib', '..\\deplibs\\lib\\zdll.lib'),
+                    ('scripts/makefile.vcwin32', '-MD', '%(cflags)s')],
                 'commands': ['nmake /f scripts/makefile.vcwin32 libpng.lib']
             },
             'mingw-w64-cross-win*': {
                 'result': {
                     'include/png.h'       : 'png.h',
                     'include/pngconf.h'   : 'pngconf.h',
-                    'include/pnglibconf.h': 'pnglibconf.h',
                     'lib/libpng.a'        : 'libpng.a'
                 },
                 'replace': [
@@ -432,13 +432,13 @@ DEPENDENT_LIBS = {
                 'commands': ['make -f scripts/makefile.gcc libpng.a']
             },
             'osx-carbon-i386': {
-                'result': ['include/png.h', 'include/pngconf.h', 'include/pnglibconf.h', 'lib/libpng.a'],
+                'result': ['include/png.h', 'include/pngconf.h', 'lib/libpng.a'],
                 'commands': [
                     'CFLAGS="-arch i386" ./configure --disable-shared --prefix=%(destdir)s',
                     'make install']
             },
             'osx-cocoa-x86-64': {
-                'result': ['include/png.h', 'include/pngconf.h', 'include/pnglibconf.h', 'lib/libpng.a'],
+                'result': ['include/png.h', 'include/pngconf.h', 'lib/libpng.a'],
                 'commands': [
                     'CFLAGS="-arch x86_64" ./configure --disable-shared --prefix=%(destdir)s',
                     'make install']
@@ -461,7 +461,7 @@ DEPENDENT_LIBS = {
                 },
                 'replace':  [('makefile.vc', '!include <win32.mak>', ''),
                              ('makefile.vc', '$(cc)', 'cl'),
-                             ('makefile.vc', '$(cflags) $(cdebug) $(cvars)', '-c -nologo -D_CRT_SECURE_NO_DEPRECATE -MD -O2 -W3')],
+                             ('makefile.vc', '$(cflags) $(cdebug) $(cvars)', '-c -nologo -D_CRT_SECURE_NO_DEPRECATE %(cflags)s -O2 -W3')],
                 'commands': [
                     'copy /y jconfig.vc jconfig.h',
                     'nmake /f makefile.vc libjpeg.lib']
@@ -489,8 +489,8 @@ DEPENDENT_LIBS = {
 
     'xz': {
         'order' : 5,
-        'url' : 'http://tukaani.org/xz/xz-5.2.0.tar.gz',
-        'sha1': 'ef6b8e0b6fd85eb1b844e555ae3ecbb3a4aa8e81',
+        'url' : 'http://tukaani.org/xz/xz-5.2.1.tar.gz',
+        'sha1': '6022493efb777ff4e872b63a60be1f1e146f3c0b',
         'build' : {
             'osx*': {
                 'result': ['bin/xz'],
@@ -676,7 +676,10 @@ def download_tarball(url, sha1, dir, name):
 def _is_compiled(dst, loc):
     present = True
     for name in loc['result']:
-        present = present and exists(os.path.join(dst, name))
+        if isinstance(name, tuple):
+            present = present and bool([n for n in name if exists(os.path.join(dst, n))])
+        else:
+            present = present and exists(os.path.join(dst, name))
     return present
 
 def build_deplibs(config, basedir, **kwargs):
@@ -923,7 +926,8 @@ def build_msvc(config, basedir):
     os.environ.update(eval(stdout.strip()))
 
     version, simple_version = get_version(basedir)
-    build_deplibs(config, basedir)
+    cflags  = config.endswith('-dbg') and '/MDd /Zi' or '/MD'
+    build_deplibs(config, basedir, cflags=cflags)
 
     sha1, url = MSVC_RUNTIME[rchop(config, '-dbg')]
     shutil.copy(download_file(url, sha1, basedir), os.path.join(basedir, config, 'vcredist.exe'))
