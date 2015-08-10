@@ -727,7 +727,7 @@ def check_setup_schroot(config):
 
 def build_setup_schroot(config, basedir):
     install_packages('git', 'debootstrap', 'schroot', 'rinse', 'debian-archive-keyring',
-                     'ruby', 'ruby-dev', 'libffi-dev', 'tar', 'xz-utils')
+                     'build-essential', 'ruby', 'ruby-dev', 'libffi-dev', 'tar', 'xz-utils')
     if not get_output('which', 'fpm'):
         shell('gem install -V fpm -N')
 
@@ -1077,7 +1077,7 @@ def build_posix_local(config, basedir):
     app    = os.path.join(basedir, config, 'app')
     qt     = os.path.join(basedir, config, 'qt')
     dist   = os.path.join(basedir, config, 'wkhtmltox-%s' % version)
-    make   = get_output('which gmake') and 'gmake' or 'make'
+    make   = get_output('which', 'gmake') and 'gmake' or 'make'
 
     mkdir_p(qt)
     mkdir_p(app)
@@ -1087,7 +1087,7 @@ def build_posix_local(config, basedir):
     mkdir_p(os.path.join(dist, 'include', 'wkhtmltox'))
     mkdir_p(os.path.join(dist, 'lib'))
 
-    build_qt(qtdir, 'make -j%d' % CPU_COUNT,
+    build_qt(qt, '%s -j%d' % (make, CPU_COUNT),
         '%s/../qt/configure %s' % (basedir, qt_config('posix', '--prefix=%s' % qt)))
 
     os.chdir(app)
