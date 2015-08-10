@@ -2,15 +2,20 @@ v0.12.3 (unreleased)
 ----------------------
 * **[qt]** upgrade the patched Qt to v4.8.7
 * removed support for CentOS 5 builds
-* update OpenSSL to 1.0.2a and xz to 5.2.1
+* update OpenSSL to 1.0.2d and xz to 5.2.1
 * downgrade libpng to 1.2.53
 * **#1843**: add --keep-relative-links and --resolve-relative-links to resolve relative links
+* **#1981**: fix temporary PDF files not being removed when writing to stdout
 * **#2104**: renamed COPYING to LICENSE
+* **#2183**: apply --javascript-delay settings for non-main resource loaders
 * **#2190**: do not depend on ICU even if it is already installed
 * **#2194**: **[qt]** fix debugging of Qt/WebKit due to missing debug information
+* **#2214**: **[qt]** fix broken rendering of transparent images when converting to PDF
+* **#2252**: fix ownership of /usr/local being changed during installation on OS X
 * **#2280**: do not allow data URIs for --header-html or --footer-html
 * **#2322**: fix broken debug builds with MSVC
 * **#2355**: add support for proxy bypass for specific hosts with --bypass-proxy-for
+* **#2418**: fix build error on OS X
 
 v0.12.2.1 (2015-01-19)
 ----------------------
