@@ -1,9 +1,13 @@
-v0.12.3 (unreleased)
-----------------------
-* **[qt]** upgrade the patched Qt to v4.8.7
+v0.12.4 (unreleased)
+--------------------
+* update OpenSSL to 1.0.2f
+
+v0.12.3 (2016-01-20)
+--------------------
+* **[qt]** upgrade the patched Qt to the last Qt 4.8 commit
 * removed support for CentOS 5 builds
-* update OpenSSL to 1.0.2d and xz to 5.2.1
-* downgrade libpng to 1.2.53
+* update OpenSSL to 1.0.2e and xz to 5.2.2 and libjpeg to 9b
+* downgrade libpng to 1.2.56
 * **#1843**: add --keep-relative-links and --resolve-relative-links to resolve relative links
 * **#1981**: fix temporary PDF files not being removed when writing to stdout
 * **#2104**: renamed COPYING to LICENSE
