@@ -269,8 +269,8 @@ enabled=1
 DEPENDENT_LIBS = {
     'openssl': {
         'order' : 1,
-        'url'   : 'https://openssl.org/source/openssl-1.0.2f.tar.gz',
-        'sha1'  : '2047c592a6e5a42bd37970bdb4a931428110a927',
+        'url'   : 'https://openssl.org/source/openssl-1.0.2g.tar.gz',
+        'sha1'  : '36af23887402a5ea4ebef91df8e61654906f58f2',
         'build' : {
             'msvc*-win32*': {
                 'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
@@ -722,7 +722,7 @@ def build_setup_schroot(config, basedir):
     install_packages('git', 'debootstrap', 'schroot', 'rinse', 'debian-archive-keyring',
                      'build-essential', 'ruby', 'ruby-dev', 'libffi-dev', 'tar', 'xz-utils')
     if not get_output('which', 'fpm'):
-        shell('gem install -V fpm -N')
+        shell('gem install fpm --no-ri --no-rdoc')
 
     login  = os.environ.get('SUDO_USER') or get_output('logname')
     target = config.split('-', 2)[2]
@@ -923,6 +923,9 @@ def build_msvc(config, basedir):
     shell('%s\\bin\\qmake %s\\..\\wkhtmltopdf.pro' % (qtdir, basedir))
     shell('nmake')
 
+    if config.endswith('-dbg'):
+        return
+
     makensis = os.path.join(get_registry_value(r'SOFTWARE\NSIS'), 'makensis.exe')
     os.chdir(os.path.join(basedir, '..'))
     shell('"%s" /DVERSION=%s /DSIMPLE_VERSION=%s /DTARGET=%s /DMSVC /DARCH=%s wkhtmltox.nsi' % \
@@ -979,6 +982,9 @@ def build_mingw64_cross(config, basedir):
                 if exists(loc) and MINGW_W64_PREFIX[rchop(config, '-dbg')] in loc and '-posix' not in loc:
                     shell('cp %s bin/' % loc)
 
+    if config.endswith('-dbg'):
+        return
+
     os.chdir(os.path.join(basedir, '..'))
     shell('makensis -DVERSION=%s -DSIMPLE_VERSION=%s -DTARGET=%s -DMINGW -DARCH=%s wkhtmltox.nsi' % \
             (version, nsis_version(simple_version), config, rchop(config, '-dbg').split('-')[-1]))
@@ -1025,6 +1031,9 @@ def build_linux_generic(config, basedir):
     chroot_env = ('amd64' in config) and 'generic-amd64' or 'generic-i386'
     os.chdir(os.path.realpath(os.path.join(basedir, '..')))
     chroot_shell(chroot_env, 'python scripts/build.py %s -chroot-build' % ' '.join(sys.argv[1:]))
+
+    if config.endswith('-dbg'):
+        return
 
     version, simple_version = get_version(basedir)
     os.chdir(os.path.join(basedir, config))
@@ -1093,6 +1102,9 @@ def build_posix_local(config, basedir):
     shell('cp ../../../include/wkhtmltox/*.h ../wkhtmltox-%s/include/wkhtmltox' % version)
     shell('cp ../../../include/wkhtmltox/dll*.inc ../wkhtmltox-%s/include/wkhtmltox' % version)
 
+    if config.endswith('-dbg'):
+        return
+
     os.chdir(os.path.join(basedir, config))
     shell('tar -c -v -f ../wkhtmltox-%s_local-%s.tar wkhtmltox-%s/' % (version, platform.node(), version))
     shell('xz --compress --force --verbose -9 ../wkhtmltox-%s_local-%s.tar' % (version, platform.node()))
@@ -1160,6 +1172,9 @@ def build_osx(config, basedir):
 
     shell('make install INSTALL_ROOT=%s' % get_dir('dist'))
 
+    if config.endswith('-dbg'):
+        return
+
     def _osx_tar(info):
         info.uid   = info.gid   = 0
         info.uname = 'root'
@@ -1225,6 +1240,10 @@ def usage(exit_code=2):
 def main():
     rootdir = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
     basedir = os.path.join(rootdir, 'static-build')
+
+    if not exists(os.path.join(rootdir, 'qt', 'configure')):
+        error('error: source code for Qt not available, cannot proceed.')
+
     if len(sys.argv) == 1:
         usage(0)
 

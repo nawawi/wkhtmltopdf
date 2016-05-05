@@ -54,7 +54,7 @@ void PdfCommandLineParser::outputSynopsis(Outputter * o) const {
 	o->text(" section can only be placed in the global options area");
 	o->endParagraph();
 
-	o->paragraph("A page objects puts the content of a singe webpage into the output document.");
+	o->paragraph("A page objects puts the content of a single webpage into the output document.");
 	o->verbatim("(page)? <input url/file name> [PAGE OPTION]...");
 	o->beginParagraph();
 	o->text("Options for the page object can be placed in the global options and the page "
@@ -65,7 +65,7 @@ void PdfCommandLineParser::outputSynopsis(Outputter * o) const {
 	o->text(" sections.");
 	o->endParagraph();
 
-	o->paragraph("A cover objects puts the content of a singe webpage into the output document, "
+	o->paragraph("A cover objects puts the content of a single webpage into the output document, "
 				 "the page does not appear in the table of content, and does not have headers and footers.");
 	o->verbatim("cover <input url/file name> [PAGE OPTION]...");
 	o->paragraph("All options that can be specified for a page object can also be specified for a cover.");
@@ -131,7 +131,7 @@ void PdfCommandLineParser::outputNotPatched(Outputter * o, bool sure) const {
 	o->listItem("Generating a table of contents.");
 	o->listItem("Adding links in the generated PDF file.");
 	o->listItem("Printing using the screen media-type.");
-	o->listItem("Disabling the smart shrink feature of webkit.");
+	o->listItem("Disabling the smart shrink feature of WebKit.");
 	o->endList();
 	o->endSection();
 }
@@ -144,9 +144,9 @@ void PdfCommandLineParser::outputPageBreakDoc(Outputter * o) const {
 	o->beginSection("Page Breaking");
 	o->paragraph(
 		"The current page breaking algorithm of WebKit leaves much to be desired. "
-		"Basically Webkit will render everything into one long page, and then cut it up "
+		"Basically WebKit will render everything into one long page, and then cut it up "
 		"into pages. This means that if you have two columns of text where one is "
-		"vertically shifted by half a line. Then Webkit will cut a line into to pieces "
+		"vertically shifted by half a line. Then WebKit will cut a line into to pieces "
 		"display the top half on one page. And the bottom half on another page. "
 		"It will also break image in two and so on.  If you are using the patched version of "
 		"QT you can use the CSS page-break-inside property to remedy this somewhat. "
@@ -189,14 +189,23 @@ void PdfCommandLineParser::outputHeaderFooterDoc(Outputter * o) const {
 	o->verbatim(
 "<html><head><script>\n"
 "function subst() {\n"
-"  var vars={};\n"
-"  var x=window.location.search.substring(1).split('&');\n"
-"  for (var i in x) {var z=x[i].split('=',2);vars[z[0]] = unescape(z[1]);}\n"
-"  var x=['frompage','topage','page','webpage','section','subsection','subsubsection'];\n"
-"  for (var i in x) {\n"
-"    var y = document.getElementsByClassName(x[i]);\n"
-"    for (var j=0; j<y.length; ++j) y[j].textContent = vars[x[i]];\n"
-"  }\n"
+"    var vars = {};\n"
+"    var query_strings_from_url = document.location.search.substring(1).split('&');\n"
+"    for (var query_string in query_strings_from_url) {\n"
+"        if (query_strings_from_url.hasOwnProperty(query_string)) {\n"
+"            var temp_var = query_strings_from_url[query_string].split('=', 2);\n"
+"            vars[temp_var[0]] = decodeURI(temp_var[1]);\n"
+"        }\n"
+"    }\n"
+"    var css_selector_classes = ['page', 'frompage', 'topage', 'webpage', 'section', 'subsection', 'date', 'isodate', 'time', 'title', 'doctitle', 'sitepage', 'sitepages'];\n"
+"    for (var css_class in css_selector_classes) {\n"
+"        if (css_selector_classes.hasOwnProperty(css_class)) {\n"
+"            var element = document.getElementsByClassName(css_selector_classes[css_class]);\n"
+"            for (var j = 0; j < element.length; ++j) {\n"
+"                element[j].textContent = vars[css_selector_classes[css_class]];\n"
+"            }\n"
+"        }\n"
+"    }\n"
 "}\n"
 "</script></head><body style=\"border:0; margin: 0;\" onload=\"subst()\">\n"
 "<table style=\"border-bottom: 1px solid black; width: 100%\">\n"
@@ -243,7 +252,7 @@ void PdfCommandLineParser::outputTableOfContentDoc(Outputter * o) const {
 	o->listItem("\"title\" the name of the section.");
 	o->listItem("\"page\" the page number the section occurs on.");
 	o->listItem("\"link\" a URL that links to the section.");
-	o->listItem("\"backLink\" the name of the anchor the the section will link back to.");
+	o->listItem("\"backLink\" the name of the anchor the section will link back to.");
 	o->endList();
 
 	o->paragraph("The remaining TOC options only affect the default style sheet "
