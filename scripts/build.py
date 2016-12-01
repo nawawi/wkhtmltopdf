@@ -31,25 +31,13 @@ BUILDERS = {
     'source-tarball':        'source_tarball',
     'msvc2013-win32':        'msvc',
     'msvc2013-win64':        'msvc',
+    'msvc2015-win32':        'msvc',
+    'msvc2015-win64':        'msvc',
     'setup-mingw-w64':       'setup_mingw_w64',
     'setup-schroot-generic': 'setup_schroot',
-    'setup-schroot-centos7': 'setup_schroot',
-    'setup-schroot-wheezy':  'setup_schroot',
-    'setup-schroot-jessie':  'setup_schroot',
-    'setup-schroot-trusty':  'setup_schroot',
-    'setup-schroot-precise': 'setup_schroot',
     'update-all-schroots':   'update_schroot',
     'linux-generic-i386':    'linux_generic',
     'linux-generic-amd64':   'linux_generic',
-    'centos7-amd64':         'linux_schroot',
-    'wheezy-i386':           'linux_schroot',
-    'wheezy-amd64':          'linux_schroot',
-    'jessie-i386':           'linux_schroot',
-    'jessie-amd64':          'linux_schroot',
-    'trusty-i386':           'linux_schroot',
-    'trusty-amd64':          'linux_schroot',
-    'precise-i386':          'linux_schroot',
-    'precise-amd64':         'linux_schroot',
     'mingw-w64-cross-win32': 'mingw64_cross',
     'mingw-w64-cross-win64': 'mingw64_cross',
     'posix-local':           'posix_local',
@@ -170,79 +158,15 @@ QT_CONFIG = {
 }
 
 LINUX_SCHROOT_SETUP = {
-    'wheezy': {
-        'title'             : 'Debian Wheezy',
-        'packaging_tool'    : 'apt',
-        'build_arch'        : ['amd64', 'i386'],
-        'compression'       : 'xz',
-        'runtime_packages'  : 'libc6 libstdc++6 zlib1g libpng12-0 libjpeg62 '\
-                              'libssl1.0.0 libfreetype6 libicu48 fontconfig '\
-                              'libx11-6 libxext6 libxrender1 libxcb1 xfonts-base xfonts-75dpi',
-        'build_packages'    : 'xz-utils ruby python perl gperf bison flex git '\
-                              'zlib1g-dev libpng12-dev libjpeg62-dev libssl-dev libfreetype6-dev libicu-dev libfontconfig1-dev '\
-                              'libx11-dev libxext-dev libxrender-dev libxcb1-dev',
-        'debootstrap'       : ('wheezy', 'http://ftp.us.debian.org/debian/', """
-                                    deb http://ftp.debian.org/debian/ wheezy         main contrib non-free
-                                    deb http://ftp.debian.org/debian/ wheezy-updates main contrib non-free
-                                    deb http://security.debian.org/   wheezy/updates main contrib non-free""")
-    },
-    'jessie': {
-        'title'             : 'Debian Jessie',
-        'packaging_tool'    : 'apt',
-        'build_arch'        : ['amd64', 'i386'],
-        'compression'       : 'xz',
-        'runtime_packages'  : 'libc6 libstdc++6 zlib1g libpng12-0 libjpeg62-turbo '\
-                              'libssl1.0.0 libfreetype6 libicu52 fontconfig '\
-                              'libx11-6 libxext6 libxrender1 libxcb1 xfonts-base xfonts-75dpi',
-        'build_packages'    : 'xz-utils ruby python perl gperf bison flex git '\
-                              'zlib1g-dev libpng12-dev libjpeg62-turbo-dev libssl-dev libfreetype6-dev libicu-dev libfontconfig1-dev '\
-                              'libx11-dev libxext-dev libxrender-dev libxcb1-dev',
-        'debootstrap'       : ('jessie', 'http://ftp.us.debian.org/debian/', """
-                                    deb http://ftp.debian.org/debian/ jessie         main contrib non-free
-                                    deb http://ftp.debian.org/debian/ jessie-updates main contrib non-free
-                                    deb http://security.debian.org/   jessie/updates main contrib non-free""")
-    },
-    'trusty': {
-        'title'             : 'Ubuntu Trusty',
-        'packaging_tool'    : 'apt',
-        'build_arch'        : ['amd64', 'i386'],
-        'compression'       : 'xz',
-        'runtime_packages'  : 'libc6 libstdc++6 zlib1g libpng12-0 libjpeg-turbo8 '\
-                              'libssl1.0.0 libfreetype6 libicu52 fontconfig '\
-                              'libx11-6 libxext6 libxrender1 libxcb1 xfonts-base xfonts-75dpi',
-        'build_packages'    : 'xz-utils ruby python perl gperf bison flex git '\
-                              'zlib1g-dev libpng12-dev libjpeg-turbo8-dev libssl-dev libfreetype6-dev libicu-dev libfontconfig1-dev '\
-                              'libx11-dev libxext-dev libxrender-dev libxcb1-dev',
-        'debootstrap'       : ('trusty', 'http://archive.ubuntu.com/ubuntu/', """
-                                    deb http://archive.ubuntu.com/ubuntu/ trusty          main restricted universe multiverse
-                                    deb http://archive.ubuntu.com/ubuntu/ trusty-updates  main restricted universe multiverse
-                                    deb http://archive.ubuntu.com/ubuntu/ trusty-security main restricted universe multiverse""")
-    },
-    'precise': {
-        'title'             : 'Ubuntu Precise',
-        'packaging_tool'    : 'apt',
-        'build_arch'        : ['amd64', 'i386'],
-        'compression'       : 'xz',
-        'runtime_packages'  : 'libc6 libstdc++6 zlib1g libpng12-0 libjpeg-turbo8 '\
-                              'libssl1.0.0 libfreetype6 libicu48 fontconfig '\
-                              'libx11-6 libxext6 libxrender1 libxcb1 xfonts-base xfonts-75dpi',
-        'build_packages'    : 'xz-utils ruby python perl gperf bison flex git '\
-                              'zlib1g-dev libpng12-dev libjpeg-turbo8-dev libssl-dev libfreetype6-dev libicu-dev libfontconfig1-dev '\
-                              'libx11-dev libxext-dev libxrender-dev libxcb1-dev',
-        'debootstrap'       : ('precise', 'http://archive.ubuntu.com/ubuntu/', """
-                                    deb http://archive.ubuntu.com/ubuntu/ precise          main restricted universe multiverse
-                                    deb http://archive.ubuntu.com/ubuntu/ precise-updates  main restricted universe multiverse
-                                    deb http://archive.ubuntu.com/ubuntu/ precise-security main restricted universe multiverse""")
-    },
     'generic': {
         'title'             : 'Generic (based on CentOS 6)',
         'packaging_tool'    : 'yum',
         'build_arch'        : ['amd64', 'i386'],
         'compression'       : 'bzip2',
-        'wrapper_command'   : 'scl enable devtoolset-3 python27 -- ',
+        'wrapper_command'   : 'scl enable devtoolset-3 python27 git19 -- ',
         'runtime_packages'  : 'glibc libstdc++ zlib openssl freetype fontconfig '\
                               'libX11 libXext libXrender xorg-x11-fonts-Type1 xorg-x11-fonts-75dpi',
-        'build_packages'    : 'scl-utils devtoolset-3-gcc-c++ python27 ruby perl git make gzip diffutils gperf bison flex '\
+        'build_packages'    : 'scl-utils devtoolset-3-gcc-c++ python27 git19 ruby perl git make gzip diffutils gperf bison flex '\
                               'zlib-devel openssl-devel freetype-devel fontconfig-devel '\
                               'libX11-devel libXrender-devel libXext-devel',
         'rinse'             : ('centos-6', """
@@ -251,26 +175,14 @@ name=Scientific Linux CERN (SLC6) - SCL addons
 baseurl=http://linuxsoft.cern.ch/cern/scl/slc6X/$basearch/yum/scl/
 gpgcheck=0
 enabled=1
-""")},
-    'centos7': {
-        'title'             : 'CentOS 7',
-        'packaging_tool'    : 'yum',
-        'build_arch'        : ['amd64'],
-        'compression'       : 'xz',
-        'runtime_packages'  : 'glibc libstdc++ zlib libpng libjpeg openssl freetype icu fontconfig '\
-                              'libX11 libXext libXrender xorg-x11-fonts-Type1 xorg-x11-fonts-75dpi',
-        'build_packages'    : 'gcc gcc-c++ binutils python ruby perl git make diffutils gperf bison flex '\
-                              'zlib-devel libpng-devel libjpeg-turbo-devel openssl-devel freetype-devel libicu-devel fontconfig-devel '\
-                              'libX11-devel libXrender-devel libXext-devel',
-        'rinse'             : ('centos-7', '')
-    }
+""")}
 }
 
 DEPENDENT_LIBS = {
     'openssl': {
         'order' : 1,
-        'url'   : 'https://openssl.org/source/openssl-1.0.2h.tar.gz',
-        'sha1'  : '577585f5f5d299c44dd3c993d3c0ac7a219e4949',
+        'url'   : 'https://openssl.org/source/openssl-1.0.2j.tar.gz',
+        'sha1'  : 'bdfbdb416942f666865fa48fe13c2d0e588df54f',
         'build' : {
             'msvc*-win32*': {
                 'result': ['include/openssl/ssl.h', 'lib/ssleay32.lib', 'lib/libeay32.lib'],
@@ -326,13 +238,14 @@ DEPENDENT_LIBS = {
 
     'libpng': {
         'order' : 3,
-        'url' : 'http://downloads.sourceforge.net/libpng/libpng-1.2.56.tar.gz',
-        'sha1': '9619a20e1bfc34edfbc4931a632a2d6a2c8a9fbc',
+        'url' : 'http://downloads.sourceforge.net/libpng/libpng-1.6.26.tar.gz',
+        'sha1': '3b2652f89b8fdcb6c29e9ed7642dfcfc0bbcf17e',
         'build' : {
             'msvc*': {
                 'result': {
                     'include/png.h'       : 'png.h',
                     'include/pngconf.h'   : 'pngconf.h',
+                    'include/pnglibconf.h': 'pnglibconf.h',
                     'lib/libpng.lib'      : 'libpng.lib'
                 },
                 'replace': [
@@ -345,6 +258,7 @@ DEPENDENT_LIBS = {
                 'result': {
                     'include/png.h'       : 'png.h',
                     'include/pngconf.h'   : 'pngconf.h',
+                    'include/pnglibconf.h': 'pnglibconf.h',
                     'lib/libpng.a'        : 'libpng.a'
                 },
                 'replace': [
@@ -535,7 +449,7 @@ def get_registry_value(key, value=None):
 
 def get_version(basedir):
     mkdir_p(basedir)
-    text = open(os.path.join(basedir, '..', 'VERSION'), 'r').read()
+    text = open(os.path.join(basedir, '..', 'VERSION'), 'r').read().strip()
     if '-' not in text:
         return (text, text)
     version = text[:text.index('-')]
@@ -564,26 +478,6 @@ def qt_config(key, *opts):
         elif arg[1+arg.index(':'):] in output:
             output.remove(arg[1+arg.index(':'):])
     return ' '.join(output)
-
-def fpm_params(cfg, ver):
-    setup  = LINUX_SCHROOT_SETUP[cfg[:cfg.index('-')]]
-    output = '--force --prefix /usr/local --category utils -s dir -C dist'
-    for key in PROJECT_SETUP:
-        output += ' --%s "%s"' % (key, PROJECT_SETUP[key])
-
-    output += ' --version "%s"' % ver
-    output += ' --package ../%s-%s_linux-%s' % (PROJECT_SETUP['name'], ver, cfg)
-    if setup['packaging_tool'] == 'apt':
-        output += '.deb -t deb --deb-compression %s' % setup['compression']
-        output += ' --provides wkhtmltopdf --conflicts wkhtmltopdf --replaces wkhtmltopdf'
-    elif setup['packaging_tool'] == 'yum':
-        output += '.rpm -t rpm --rpm-compression %s --epoch 1' % setup['compression']
-
-    for depend in setup['runtime_packages'].split():
-        output += ' --depends %s' % depend
-
-    output += ' .'
-    return output
 
 def download_file(url, sha1, dir):
     name = url.split('/')[-1]
@@ -720,9 +614,7 @@ def check_setup_schroot(config):
 
 def build_setup_schroot(config, basedir):
     install_packages('git', 'debootstrap', 'schroot', 'rinse', 'debian-archive-keyring',
-                     'build-essential', 'ruby', 'ruby-dev', 'libffi-dev', 'tar', 'xz-utils')
-    if not get_output('which', 'fpm'):
-        shell('gem install fpm --no-ri --no-rdoc')
+                     'build-essential', 'tar', 'xz-utils')
 
     login  = os.environ.get('SUDO_USER') or get_output('logname')
     target = config.split('-', 2)[2]
@@ -754,17 +646,7 @@ def build_setup_schroot(config, basedir):
             shell('umount %s/proc' % root_dir)
             shell('umount %s/sys'  % root_dir)
 
-        if distro['packaging_tool'] == 'apt':
-            cfg = distro['debootstrap']
-            shell('debootstrap --arch=%s --variant=buildd %s %s %s' % (arch, cfg[0], root_dir, cfg[1]))
-
-            open(os.path.join(root_dir, 'etc/apt/sources.list'), 'w').write(cfg[2])
-            open(os.path.join(root_dir, 'usr/sbin/policy-rc.d'), 'w').write("#!/bin/bash\nexit 101\n")
-            do_setup('chmod a+x /usr/sbin/policy-rc.d',         # hack for Ubuntu Precise
-                     'apt-get update',
-                     'apt-get dist-upgrade --assume-yes',
-                     'apt-get install --assume-yes %s' % pkg_list)
-        elif distro['packaging_tool'] == 'yum':
+        if distro['packaging_tool'] == 'yum':
             rinse = (arch == 'i386' and 'linux32 rinse' or 'rinse')
             rinse_distro, extra_repos = distro['rinse']
             shell('%s --arch %s --distribution %s --directory %s' % (rinse, arch, rinse_distro, root_dir))
@@ -842,16 +724,19 @@ def build_source_tarball(config, basedir):
 # --------------------------------------------------------------- MSVC (2013 only)
 
 MSVC_LOCATION = {
-    'msvc2013': 'VS120COMNTOOLS'
+    'msvc2013': ('VS120COMNTOOLS', '12.0'),
+    'msvc2015': ('VS140COMNTOOLS', '14.0')
 }
 MSVC_RUNTIME = {
     'msvc2013-win32': ('df7f0a73bfa077e483e51bfb97f5e2eceedfb6a3', 'http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe'),
-    'msvc2013-win64': ('8bf41ba9eef02d30635a10433817dbb6886da5a2', 'http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe')
+    'msvc2013-win64': ('8bf41ba9eef02d30635a10433817dbb6886da5a2', 'http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe'),
+    'msvc2015-win32': ('bfb74e498c44d3a103ca3aa2831763fb417134d1', 'https://download.microsoft.com/download/9/3/F/93FCF1E7-E6A4-478B-96E7-D4B285925B00/vc_redist.x86.exe'),
+    'msvc2015-win64': ('3155cb0f146b927fcc30647c1a904cd162548c8c', 'https://download.microsoft.com/download/9/3/F/93FCF1E7-E6A4-478B-96E7-D4B285925B00/vc_redist.x64.exe')
 }
 
 def check_msvc(config):
     version, arch = rchop(config, '-dbg').split('-')
-    env_var = MSVC_LOCATION[version]
+    env_var, _ = MSVC_LOCATION[version]
     if not env_var in os.environ:
         error("%s does not seem to be installed." % version)
 
@@ -876,7 +761,8 @@ def check_msvc(config):
 
 def build_msvc(config, basedir):
     msvc, arch = rchop(config, '-dbg').split('-')
-    vcdir = os.path.join(os.environ[MSVC_LOCATION[msvc]], '..', '..', 'VC')
+    env_var, reg_ver = MSVC_LOCATION[msvc]
+    vcdir = os.path.join(os.environ[env_var], '..', '..', 'VC')
     vcarg = 'x86'
     if arch == 'win64':
         if exists(os.path.join(vcdir, 'bin', 'amd64', 'cl.exe')):
@@ -928,8 +814,8 @@ def build_msvc(config, basedir):
 
     makensis = os.path.join(get_registry_value(r'SOFTWARE\NSIS'), 'makensis.exe')
     os.chdir(os.path.join(basedir, '..'))
-    shell('"%s" /DVERSION=%s /DSIMPLE_VERSION=%s /DTARGET=%s /DMSVC /DARCH=%s wkhtmltox.nsi' % \
-            (makensis, version, nsis_version(simple_version), config, arch))
+    shell('"%s" /DVERSION=%s /DSIMPLE_VERSION=%s /DTARGET=%s /DMSVC=%s /DARCH=%s wkhtmltox.nsi' % \
+            (makensis, version, nsis_version(simple_version), config, reg_ver, arch))
 
 # ------------------------------------------------ MinGW-W64 Cross Environment
 
@@ -973,14 +859,6 @@ def build_mingw64_cross(config, basedir):
     shell('%s/bin/qmake -spec win32-g++-4.6 %s/../wkhtmltopdf.pro' % (qtdir, basedir))
     shell('make')
     shutil.copy('bin/libwkhtmltox0.a', 'bin/wkhtmltox.lib')
-    shell('rm -f bin/lib*.dll')
-    for dll in ['libgcc_s_sjlj-1.dll', 'libgcc_s_seh-1.dll', 'libstdc++-6.dll']:
-        dll_path = get_output('dpkg', '-S', dll)
-        if dll_path:
-            for line in dll_path.split('\n'):
-                loc = line[1+line.index(':'):].strip()
-                if exists(loc) and MINGW_W64_PREFIX[rchop(config, '-dbg')] in loc and '-posix' not in loc:
-                    shell('cp %s bin/' % loc)
 
     if config.endswith('-dbg'):
         return
@@ -990,38 +868,6 @@ def build_mingw64_cross(config, basedir):
             (version, nsis_version(simple_version), config, rchop(config, '-dbg').split('-')[-1]))
 
 # -------------------------------------------------- Linux schroot environment
-
-def check_linux_schroot(config):
-    chroot_shell(rchop(config, '-dbg'), 'gcc --version')
-
-def build_linux_schroot(config, basedir):
-    os.chdir(os.path.realpath(os.path.join(basedir, '..')))
-    chroot_shell(rchop(config, '-dbg'), 'python scripts/build.py %s -chroot-build' % ' '.join(sys.argv[1:]))
-
-    version, simple_version = get_version(basedir)
-    os.chdir(os.path.join(basedir, config))
-    shell('fpm %s' % fpm_params(config, version))
-
-def chroot_build_linux_schroot(config, basedir):
-    version, simple_version = get_version(basedir)
-
-    qtdir  = os.path.join(basedir, config, 'qt')
-    mkdir_p(qtdir)
-
-    build_qt(qtdir, 'make -j%d' % CPU_COUNT,
-        '%s/../qt/configure %s' % (basedir, qt_config('posix', '--prefix=%s' % qtdir)))
-
-    app    = os.path.join(basedir, config, 'app')
-    dist   = os.path.join(basedir, config, 'dist')
-    mkdir_p(app)
-    mkdir_p(dist)
-    os.chdir(app)
-    shell('rm -f bin/*')
-
-    os.environ['WKHTMLTOX_VERSION'] = version
-    os.environ['XZ_OPT']            = '-9'
-    shell('%s/bin/qmake %s/../wkhtmltopdf.pro' % (qtdir, basedir))
-    shell('make install INSTALL_ROOT=%s' % dist)
 
 def check_linux_generic(config):
     chroot_env = ('amd64' in config) and 'generic-amd64' or 'generic-i386'
