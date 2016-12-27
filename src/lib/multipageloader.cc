@@ -213,10 +213,11 @@ ResourceObject::ResourceObject(MultiPageLoaderPrivate & mpl, const QUrl & u, con
 	}
 
 	webPage.setNetworkAccessManager(&networkAccessManager);
-
+#ifdef __EXTENSIVE_WKHTMLTOPDF_QT_HACK__
 	double devicePixelRatio = multiPageLoader.dpi / 96.; // The used version of WebKit always renders at 96 DPI when no zoom is applied. It does not fully support a device pixel ratio != 1 natively.
 	webPage.mainFrame()->setZoomFactor(devicePixelRatio * settings.zoomFactor); // Zoom in the page to achieve a higher DPI.
 	webPage.setDevicePixelRatio(devicePixelRatio); // Fix CSS media queries (does not affect anything else).
+#endif
 }
 
 /*!
@@ -451,6 +452,7 @@ void ResourceObject::load() {
 	}
 
 
+	multiPageLoader.cookieJar->clearExtraCookies();
 	typedef QPair<QString, QString> SSP;
  	foreach (const SSP & pair, settings.cookies)
 		multiPageLoader.cookieJar->useCookie(url, pair.first, pair.second);
@@ -467,6 +469,10 @@ void ResourceObject::load() {
 			r.setHeader(QNetworkRequest::ContentTypeHeader, QString("multipart/form-data, boundary=")+boundary);
 		webPage.mainFrame()->load(r, QNetworkAccessManager::PostOperation, postData);
 	}
+}
+
+void MyCookieJar::clearExtraCookies() {
+	extraCookies.clear();	
 }
 
 void MyCookieJar::useCookie(const QUrl &, const QString & name, const QString & value) {
