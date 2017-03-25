@@ -49,11 +49,11 @@
 using namespace wkhtmltopdf;
 
 void MyImageConverter::warning(const QString & message) {
-	if (warning_cb) (warning_cb)(reinterpret_cast<wkhtmltoimage_converter*>(this), message.toUtf8().constData());
+	if (warning_cb && globalSettings->logLevel > settings::Error) (warning_cb)(reinterpret_cast<wkhtmltoimage_converter*>(this), message.toUtf8().constData());
 }
 
 void MyImageConverter::error(const QString & message) {
-	if (error_cb) (error_cb)(reinterpret_cast<wkhtmltoimage_converter*>(this), message.toUtf8().constData());
+	if (error_cb && globalSettings->logLevel > settings::None) (error_cb)(reinterpret_cast<wkhtmltoimage_converter*>(this), message.toUtf8().constData());
 }
 
 void MyImageConverter::phaseChanged() {
@@ -101,6 +101,10 @@ CAPI(int) wkhtmltoimage_deinit() {
 
 CAPI(wkhtmltoimage_global_settings *) wkhtmltoimage_create_global_settings() {
 	return reinterpret_cast<wkhtmltoimage_global_settings *>(new settings::ImageGlobal());
+}
+
+CAPI(void) wkhtmltoimage_destroy_global_settings(wkhtmltoimage_global_settings * obj) {
+    delete reinterpret_cast<settings::ImageGlobal *>(obj);
 }
 
 CAPI(int) wkhtmltoimage_set_global_setting(wkhtmltoimage_global_settings * settings, const char * name, const char * value) {
