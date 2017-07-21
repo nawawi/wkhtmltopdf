@@ -77,7 +77,7 @@ void PdfCommandLineParser::outputSynopsis(Outputter * o) const {
 			"further more the options from the ");
 	o->sectionLink("TOC Options");
 	o->text(" section can also be applied. The table of contents is generated via XSLT which means "
-			"that it can be styled to look however you want it to look. To get an aide of how to "
+			"that it can be styled to look however you want it to look. To get an idea of how to "
 			"do this you can dump the default xslt document by supplying the --dump-default-toc-xsl, and the outline it works on by supplying --dump-outline, see the ");
 	o->sectionLink("Outline Options");
 	o->text(" section.");
@@ -187,6 +187,7 @@ void PdfCommandLineParser::outputHeaderFooterDoc(Outputter * o) const {
 	o->paragraph("Headers and footers can also be supplied with HTML documents. As an example one "
 				 "could specify --header-html header.html, and use the following content in header.html:");
 	o->verbatim(
+"<!DOCTYPE html>\n"
 "<html><head><script>\n"
 "function subst() {\n"
 "    var vars = {};\n"
@@ -313,7 +314,7 @@ void PdfCommandLineParser::outputDocStart(Outputter * o) const {
 void PdfCommandLineParser::outputArgsFromStdin(Outputter * o) const {
 	o->beginSection("Reading arguments from stdin");
 	o->paragraph("If you need to convert a lot of pages in a batch, and you feel that wkhtmltopdf "
-				 "is a bit to slow to start up, then you should try --read-args-from-stdin,");
+				 "is a bit too slow to start up, then you should try --read-args-from-stdin,");
 	o->paragraph("When --read-args-from-stdin each line of input sent to wkhtmltopdf on stdin "
 				 "will act as a separate invocation of wkhtmltopdf, with the arguments specified "
 				 "on the given line combined with the arguments given to wkhtmltopdf");
