@@ -18,7 +18,6 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with wkhtmltopdf.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #include "multipageloader_p.hh"
 #include <QFile>
 #include <QFileInfo>
@@ -231,12 +230,13 @@ ResourceObject::ResourceObject(MultiPageLoaderPrivate & mpl, const QUrl & u, con
 		proxy.setHostName(settings.proxy.host);
 		proxy.setPort(settings.proxy.port);
 		proxy.setType(settings.proxy.type);
-		// to retrieve a web page, it's not needed to use a fully transparent
-		// http proxy. Moreover, the CONNECT() method is frequently disabled
-		// by proxies administrators.
-		if (settings.proxy.type == QNetworkProxy::HttpProxy)
-			proxy.setCapabilities(QNetworkProxy::CachingCapability |
-			                      QNetworkProxy::TunnelingCapability);
+
+		if (settings.proxy.type == QNetworkProxy::HttpProxy) {
+			QNetworkProxy::Capabilities capabilities = QNetworkProxy::CachingCapability | QNetworkProxy::TunnelingCapability;
+			if (settings.proxyHostNameLookup)
+				capabilities |= QNetworkProxy::HostNameLookupCapability;
+			proxy.setCapabilities(capabilities);
+		}
 		if (!settings.proxy.user.isEmpty())
 			proxy.setUser(settings.proxy.user);
 		if (!settings.proxy.password.isEmpty())
@@ -407,8 +407,8 @@ void ResourceObject::amfinished(QNetworkReply * reply) {
 			//      no HTTP access at all, so we want network errors to be reported
 			//      with a higher priority than HTTP ones.
 			//      See: http://doc-snapshot.qt-project.org/4.8/qnetworkreply.html#NetworkError-enum
-			error(QString("Failed to load %1, with network status code %2 and http status code %3")
-				.arg(reply->url().toString()).arg(networkStatus).arg(httpStatus));
+			error(QString("Failed to load %1, with network status code %2 and http status code %3 - %4")
+				.arg(reply->url().toString()).arg(networkStatus).arg(httpStatus).arg(reply->errorString()));
 			httpErrorCode = networkStatus > 0 ? (networkStatus + 1000) : httpStatus;
 			return;
 		}
