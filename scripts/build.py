@@ -106,7 +106,7 @@ QT_CONFIG = {
         '-xrender',                 # xrender support is required
         '-largefile',
         '-iconv',                   # iconv support is required for text codecs
-        '-openssl',                 # load OpenSSL binaries at runtime
+        '-openssl-linked',          # directly link to OpenSSL during compilation
         '-no-javascript-jit',       # can cause crashes/excess memory usage
         '-no-rpath',
         '-no-dbus',
@@ -219,7 +219,7 @@ DEPENDENT_LIBS = {
                 'result': {
                     'include/zlib.h' : 'zlib.h',
                     'include/zconf.h': 'zconf.h',
-                    'lib/zdll.lib'   : 'zlib.lib'
+                    'lib/zlib.lib'   : 'zlib.lib'
                 },
                 'replace':  [('win32/Makefile.msc', '-MD', '%(cflags)s')],
                 'commands': ['nmake /f win32/Makefile.msc zlib.lib']
@@ -250,7 +250,7 @@ DEPENDENT_LIBS = {
                 },
                 'replace': [
                     ('scripts/makefile.vcwin32', '-I..\\zlib', '-I..\\deplibs\\include'),
-                    ('scripts/makefile.vcwin32', '..\\zlib\\zlib.lib', '..\\deplibs\\lib\\zdll.lib'),
+                    ('scripts/makefile.vcwin32', '..\\zlib\\zlib.lib', '..\\deplibs\\lib\\zlib.lib'),
                     ('scripts/makefile.vcwin32', '-MD', '%(cflags)s')],
                 'commands': ['nmake /f scripts/makefile.vcwin32 libpng.lib']
             },
@@ -339,7 +339,7 @@ DEPENDENT_LIBS = {
 
     'xz': {
         'order' : 5,
-        'url' : 'http://tukaani.org/xz/xz-5.2.3.tar.gz',
+        'url' : 'http://downloads.sourceforge.net/lzmautils/xz-5.2.3.tar.gz',
         'sha1': '529638eec3597e429cc54c74551ac0a89169e841',
         'build' : {
             'osx*': {
@@ -950,10 +950,7 @@ def build_posix_local(config, basedir):
     os.environ['WKHTMLTOX_VERSION'] = version
     shell('../qt/bin/qmake ../../../wkhtmltopdf.pro')
     shell('%s -j%d' % (make, CPU_COUNT))
-    shell('cp bin/wkhtmlto* ../wkhtmltox-%s/bin' % version)
-    shell('cp -P bin/libwkhtmltox*.so.* ../wkhtmltox-%s/lib' % version)
-    shell('cp ../../../include/wkhtmltox/*.h ../wkhtmltox-%s/include/wkhtmltox' % version)
-    shell('cp ../../../include/wkhtmltox/dll*.inc ../wkhtmltox-%s/include/wkhtmltox' % version)
+    shell('%s install INSTALL_ROOT=../wkhtmltox-%s' % (make, version))
 
     if config.endswith('-dbg'):
         return
