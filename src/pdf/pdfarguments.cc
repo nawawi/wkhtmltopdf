@@ -1,7 +1,7 @@
 // -*- mode: c++; tab-width: 4; indent-tabs-mode: t; eval: (progn (c-set-style "stroustrup") (c-set-offset 'innamespace 0)); -*-
 // vi:set ts=4 sts=4 sw=4 noet :
 //
-// Copyright 2010, 2011 wkhtmltopdf authors
+// Copyright 2010-2020 wkhtmltopdf authors
 //
 // This file is part of wkhtmltopdf.
 //
@@ -247,8 +247,8 @@ PdfCommandLineParser::PdfCommandLineParser(PdfGlobal & s, QList<PdfObject> & ps)
 
 	extended(false);
  	qthack(true);
-	addarg("print-media-type",0,"Use print media-type instead of screen", new ConstSetter<bool>(od.web.printMediaType,true));
-	addarg("no-print-media-type",0,"Do not use print media-type instead of screen", new ConstSetter<bool>(od.web.printMediaType, false));
+	addarg("print-media-type",0,"Use print media-type instead of screen", new ConstSetter<bool>(od.load.printMediaType,true));
+	addarg("no-print-media-type",0,"Do not use print media-type instead of screen", new ConstSetter<bool>(od.load.printMediaType, false));
 
  	extended(true);
  	qthack(true);

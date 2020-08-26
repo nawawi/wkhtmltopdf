@@ -1,7 +1,7 @@
 // -*- mode: c++; tab-width: 4; indent-tabs-mode: t; eval: (progn (c-set-style "stroustrup") (c-set-offset 'innamespace 0)); -*-
 // vi:set ts=4 sts=4 sw=4 noet :
 //
-// Copyright 2010 wkhtmltopdf authors
+// Copyright 2010-2020 wkhtmltopdf authors
 //
 // This file is part of wkhtmltopdf.
 //
@@ -29,7 +29,6 @@ Web::Web() :
 	enableJavascript(true),
 	enableIntelligentShrinking(true),
 	minimumFontSize(-1),
-	printMediaType(false),
 	defaultEncoding(""),
 	userStyleSheet(""),
 	enablePlugins(false) {}

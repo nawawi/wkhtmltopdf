@@ -1,7 +1,7 @@
 // -*- mode: c++; tab-width: 4; indent-tabs-mode: t; eval: (progn (c-set-style "stroustrup") (c-set-offset 'innamespace 0)); -*-
 // vi:set ts=4 sts=4 sw=4 noet :
 //
-// Copyright 2010, 2011 wkhtmltopdf authors
+// Copyright 2010-2020 wkhtmltopdf authors
 //
 // This file is part of wkhtmltopdf.
 //
@@ -183,7 +183,7 @@ void PdfCommandLineParser::outputHeaderFooterDoc(Outputter * o) const {
 	o->paragraph("As an example specifying --header-right \"Page [page] of [topage]\", "
 				 "will result in the text \"Page x of y\" where x is the number of the "
 				 "current page and y is the number of the last page, to appear in the upper "
-				 "left corner in the document.");
+				 "right corner in the document.");
 	o->paragraph("Headers and footers can also be supplied with HTML documents. As an example one "
 				 "could specify --header-html header.html, and use the following content in header.html:");
 	o->verbatim(
@@ -229,24 +229,24 @@ void PdfCommandLineParser::outputTableOfContentDoc(Outputter * o) const {
 	o->beginSection("Table Of Contents");
 	o->paragraph("A table of contents can be added to the document by adding a toc object "
 				 "to the command line. For example:");
-	o->verbatim("wkhtmltopdf toc http://qt-project.org/doc/qt-4.8/qstring.html qstring.pdf\n");
+	o->verbatim("wkhtmltopdf toc https://qt-project.org/doc/qt-4.8/qstring.html qstring.pdf\n");
 	o->paragraph("The table of contents is generated based on the H tags in the input "
 				 "documents. First a XML document is generated, then it is converted to "
 				 "HTML using XSLT.");
 	o->paragraph("The generated XML document can be viewed by dumping it to a file using "
 				 "the --dump-outline switch. For example:");
-	o->verbatim("wkhtmltopdf --dump-outline toc.xml http://qt-project.org/doc/qt-4.8/qstring.html qstring.pdf\n");
+	o->verbatim("wkhtmltopdf --dump-outline toc.xml https://qt-project.org/doc/qt-4.8/qstring.html qstring.pdf\n");
 	o->paragraph("The XSLT document can be specified using the --xsl-style-sheet switch. "
 				 "For example:");
-	o->verbatim("wkhtmltopdf toc --xsl-style-sheet my.xsl http://qt-project.org/doc/qt-4.8/qstring.html qstring.pdf\n");
+	o->verbatim("wkhtmltopdf toc --xsl-style-sheet my.xsl https://qt-project.org/doc/qt-4.8/qstring.html qstring.pdf\n");
 	o->paragraph("The --dump-default-toc-xsl switch can be used to dump the default "
 				 "XSLT style sheet to stdout. This is a good start for writing your "
 				 "own style sheet");
 	o->verbatim("wkhtmltopdf --dump-default-toc-xsl");
 	o->paragraph("The XML document is in the namespace "
-				 "\"http://wkhtmltopdf.org/outline\" "
+				 "\"http://wkhtmltopdf.org/outline\", "
 				 "it has a root node called \"outline\" which contains a number of "
-				 "\"item\" nodes. An item can contain any number of item. These are the "
+				 "\"item\" nodes. An item can contain any number of items. These are the "
 				 "outline subsections to the section the item represents. A item node "
 				 "has the following attributes:");
 	o->beginList();
@@ -271,14 +271,14 @@ void PdfCommandLineParser::outputOutlineDoc(Outputter * o) const {
 	o->text(
 		"Wkhtmltopdf with patched qt has support for PDF outlines also known as "
 		"book marks, this can be enabled by specifying the --outline switch. "
-		"The outlines are generated based on the <h?> tags, for a in-depth "
+		"The outlines are generated based on the <h?> tags, for an in-depth "
 		"description of how this is done see the ");
 	o->sectionLink("Table Of Contents");
 	o->text(" section. ");
 	o->endParagraph();
 	o->paragraph(
-		"The outline tree can sometimes be very deep, if the <h?> tags where "
-		"spread to generous in the HTML document.  The --outline-depth switch can "
+		"The outline tree can sometimes be very deep, if the <h?> tags are "
+		"spread too generously in the HTML document.  The --outline-depth switch can "
 		"be used to bound this.");
 	o->endSection();
 }
@@ -291,7 +291,7 @@ void PdfCommandLineParser::outputContact(Outputter * o) const {
 	o->beginSection("Contact");
 	o->beginParagraph();
 	o->text("If you experience bugs or want to request new features please visit ");
-	o->link("https://github.com/wkhtmltopdf/wkhtmltopdf/issues");
+	o->link("https://wkhtmltopdf.org/support.html");
 	o->endParagraph();
 	o->endSection();
 }
@@ -319,8 +319,8 @@ void PdfCommandLineParser::outputArgsFromStdin(Outputter * o) const {
 				 "will act as a separate invocation of wkhtmltopdf, with the arguments specified "
 				 "on the given line combined with the arguments given to wkhtmltopdf");
 	o->paragraph("For example one could do the following:");
-	o->verbatim("echo \"http://qt-project.org/doc/qt-4.8/qapplication.html qapplication.pdf\" >> cmds\n"
-				"echo \"cover google.com http://en.wikipedia.org/wiki/Qt_(software) qt.pdf\" >> cmds\n"
+	o->verbatim("echo \"https://qt-project.org/doc/qt-4.8/qapplication.html qapplication.pdf\" >> cmds\n"
+				"echo \"cover google.com https://en.wikipedia.org/wiki/Qt_(software) qt.pdf\" >> cmds\n"
 				"wkhtmltopdf --read-args-from-stdin --book < cmds\n");
 	o->endSection();
 }
@@ -353,7 +353,7 @@ void PdfCommandLineParser::outputPageSizes(Outputter * o) const {
 	o->text("The default page size of the rendered document is A4, but by using the --page-size "
 			"option this can be changed to almost anything else, such as: A3, Letter and Legal.  "
 			"For a full list of supported pages sizes please see ");
-	o->link("http://qt-project.org/doc/qt-4.8/qprinter.html#PaperSize-enum");
+	o->link("https://qt-project.org/doc/qt-4.8/qprinter.html#PaperSize-enum");
 	o->text(".");
 	o->endParagraph();
 	o->paragraph("For a more fine grained control over the page size the "
@@ -369,11 +369,11 @@ void PdfCommandLineParser::outputExamples(Outputter * o) const {
 	o->beginSection("Examples");
 	o->paragraph("This section presents a number of examples of how to invoke wkhtmltopdf.");
 	o->paragraph("To convert a remote HTML file to PDF:");
-	o->verbatim("wkhtmltopdf http://www.google.com google.pdf\n");
+	o->verbatim("wkhtmltopdf https://www.google.com google.pdf\n");
 	o->paragraph("To convert a local HTML file to PDF:");
 	o->verbatim("wkhtmltopdf my.html my.pdf\n");
 	o->paragraph("Produce the eler2.pdf sample file:");
-	o->verbatim("wkhtmltopdf -H  http://geekz.co.uk/lovesraymond/archive/eler-highlights-2008 eler2.pdf\n");
+	o->verbatim("wkhtmltopdf -H  https://geekz.co.uk/lovesraymond/archive/eler-highlights-2008 eler2.pdf\n");
 	o->paragraph("Printing a book with a table of contents:");
 	o->verbatim("wkhtmltopdf -H cover cover.html toc chapter1.html chapter2.html chapter3.html book.pdf\n");
 	o->endSection();

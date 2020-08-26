@@ -1,7 +1,7 @@
 // -*- mode: c++; tab-width: 4; indent-tabs-mode: t; eval: (progn (c-set-style "stroustrup") (c-set-offset 'innamespace 0)); -*-
 // vi:set ts=4 sts=4 sw=4 noet :
 //
-// Copyright 2010 wkhtmltopdf authors
+// Copyright 2010-2020 wkhtmltopdf authors
 //
 // This file is part of wkhtmltopdf.
 //
@@ -45,9 +45,6 @@ struct DLL_PUBLIC Web {
 
 	//! Minimum font size
 	int minimumFontSize;
-
-	//! Should we use the print or the screen media type
-	bool printMediaType;
 
 	//! Encoding used to enterpit a document with do supplied encoding
 	QString defaultEncoding;

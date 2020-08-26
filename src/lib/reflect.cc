@@ -1,7 +1,7 @@
 // -*- mode: c++; tab-width: 4; indent-tabs-mode: t; eval: (progn (c-set-style "stroustrup") (c-set-offset 'innamespace 0)); -*-
 // vi:set ts=4 sts=4 sw=4 noet :
 //
-// Copyright 2010, 2011 wkhtmltopdf authors
+// Copyright 2010-2020 wkhtmltopdf authors
 //
 // This file is part of wkhtmltopdf.
 //
@@ -81,6 +81,7 @@ ReflectImpl<LoadPage>::ReflectImpl(LoadPage & c) {
 	WKHTMLTOPDF_REFLECT(cacheDir);
 	WKHTMLTOPDF_REFLECT(bypassProxyForHosts);
 	WKHTMLTOPDF_REFLECT(proxyHostNameLookup);
+	WKHTMLTOPDF_REFLECT(printMediaType);
 }
 
 ReflectImpl<Web>::ReflectImpl(Web & c) {
@@ -89,7 +90,6 @@ ReflectImpl<Web>::ReflectImpl(Web & c) {
 	WKHTMLTOPDF_REFLECT(enableJavascript);
 	WKHTMLTOPDF_REFLECT(enableIntelligentShrinking);
 	WKHTMLTOPDF_REFLECT(minimumFontSize);
-	WKHTMLTOPDF_REFLECT(printMediaType);
 	WKHTMLTOPDF_REFLECT(defaultEncoding);
 	WKHTMLTOPDF_REFLECT(userStyleSheet);
 	WKHTMLTOPDF_REFLECT(enablePlugins);

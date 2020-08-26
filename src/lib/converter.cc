@@ -1,7 +1,7 @@
 // -*- mode: c++; tab-width: 4; indent-tabs-mode: t; eval: (progn (c-set-style "stroustrup") (c-set-offset 'innamespace 0)); -*-
 // vi:set ts=4 sts=4 sw=4 noet :
 //
-// Copyright 2010 wkhtmltopdf authors
+// Copyright 2010-2020 wkhtmltopdf authors
 //
 // This file is part of wkhtmltopdf.
 //
@@ -36,14 +36,13 @@ namespace wkhtmltopdf {
 
 
 void ConverterPrivate::updateWebSettings(QWebSettings * ws, const settings::Web & s) const {
-#ifdef  __EXTENSIVE_WKHTMLTOPDF_QT_HACK__
 	if (!s.defaultEncoding.isEmpty())
 		ws->setDefaultTextEncoding(s.defaultEncoding);
+#ifdef  __EXTENSIVE_WKHTMLTOPDF_QT_HACK__
 	if (!s.enableIntelligentShrinking) {
 		ws->setPrintingMaximumShrinkFactor(1.0);
 		ws->setPrintingMinimumShrinkFactor(1.0);
 	}
-	ws->setPrintingMediaType(s.printMediaType?"print":"screen");
 #endif
 	ws->setAttribute(QWebSettings::JavaEnabled, s.enablePlugins);
 	ws->setAttribute(QWebSettings::JavascriptEnabled, s.enableJavascript);

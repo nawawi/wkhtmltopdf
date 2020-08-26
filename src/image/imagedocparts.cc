@@ -1,7 +1,7 @@
 // -*- mode: c++; tab-width: 4; indent-tabs-mode: t; eval: (progn (c-set-style "stroustrup") (c-set-offset 'innamespace 0)); -*-
 // vi:set ts=4 sts=4 sw=4 noet :
 //
-// Copyright 2010, 2011 wkhtmltopdf authors
+// Copyright 2010-2020 wkhtmltopdf authors
 //
 // This file is part of wkhtmltopdf.
 //
@@ -66,7 +66,7 @@ void ImageCommandLineParser::outputContact(Outputter * o) const {
 	o->beginSection("Contact");
 	o->beginParagraph();
 	o->text("If you experience bugs or want to request new features please visit ");
-	o->link("https://github.com/wkhtmltopdf/wkhtmltopdf/issues");
+	o->link("https://wkhtmltopdf.org/support.html");
 	o->endParagraph();
 	o->endSection();
 }
@@ -115,7 +115,7 @@ void ImageCommandLineParser::outputExamples(Outputter * o) const {
 	o->beginSection("Examples");
 	o->paragraph("This section presents a number of examples of how to invoke wkhtmltoimage.");
 	o->paragraph("To convert a remote HTML file to PNG:");
-	o->verbatim("wkhtmltoimage http://www.google.com google.png\n");
+	o->verbatim("wkhtmltoimage https://www.google.com google.png\n");
 	o->paragraph("To convert a local HTML file to PNG:");
 	o->verbatim("wkhtmltoimage my.html my.png\n");
 	o->endSection();

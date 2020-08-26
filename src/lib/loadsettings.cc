@@ -140,12 +140,13 @@ LoadPage::LoadPage():
 	windowStatus(""),
 	zoomFactor(1.0),
 	repeatCustomHeaders(false),
-	blockLocalFileAccess(false),
+	blockLocalFileAccess(true),
 	stopSlowScripts(true),
 	debugJavascript(false),
 	loadErrorHandling(abort),
 	mediaLoadErrorHandling(ignore),
 	cacheDir(""),
+	printMediaType(false),
 	proxyHostNameLookup(false) {};
 
 }
